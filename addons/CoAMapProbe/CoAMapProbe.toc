@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: CoA Map Probe
+## Notes: Diagnostic: records the client's world map list and player map positions for Zygor CoA support. /coaprobe
+## Version: 1.0
+## SavedVariables: CoAMapProbeDB
+
+CoAMapProbe.lua

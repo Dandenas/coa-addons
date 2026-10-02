@@ -1,0 +1,193 @@
+{
+ "zygor": {
+  "edit": {
+   "files.xml": [
+    {
+     "old": "\n\t<Script file=\"ZygorGuidesViewer.lua\"/>\n\t<Script file=\"GuideMenuHover.lua\"/>\n\t<Script file=\"TargetPreview.lua\"/>",
+     "new": "\n\t<Script file=\"ZygorGuidesViewer.lua\"/>\n\t<Script file=\"CoAZones.lua\"/>\n\t<Script file=\"GuideMenuHover.lua\"/>\n\t<Script file=\"TargetPreview.lua\"/>"
+    },
+    {
+     "old": "\t<Script file=\"Code-WOTLK\\Item-DataTables.lua\"/>\n\t<Script file=\"Data-WOTLK\\Item-Statweights.lua\"/>\n\t<Script file=\"Data-WOTLK\\GearFinderItemMeta.lua\"/>\n\t<Script file=\"Data-WOTLK\\GearFinderVendorSources.lua\"/>",
+     "new": "\t<Script file=\"Code-WOTLK\\Item-DataTables.lua\"/>\n\t<Script file=\"Data-WOTLK\\Item-Statweights.lua\"/>\n\t<Script file=\"Data-WOTLK\\CoA-ClassSpecs.lua\"/>\n\t<Script file=\"Data-WOTLK\\GearFinderItemMeta.lua\"/>\n\t<Script file=\"Data-WOTLK\\GearFinderVendorSources.lua\"/>"
+    },
+    {
+     "old": "\t<Include file=\"ZygorTalentAdvisor\\Builds\\Autoload.xml\"/>\n\t<Script file=\"TalentAdvisorCompat.lua\"/>\n\n\t<Script file=\"Step.lua\"/>",
+     "new": "\t<Include file=\"ZygorTalentAdvisor\\Builds\\Autoload.xml\"/>\n\t<Script file=\"TalentAdvisorCompat.lua\"/>\n\t<Include file=\"ZygorTalentAdvisorCOA\\files.xml\"/>\n\n\t<Script file=\"Step.lua\"/>"
+    }
+   ],
+   "Goal.lua": [
+    {
+     "old": "\nlocal ZGV = ZygorGuidesViewer\nif not ZGV then return end\nlocal L = ZGV.L",
+     "new": "\nlocal ZGV = ZygorGuidesViewer\n-- Conquest of Azeroth: fold CoA sub-map zones (e.g. \"Northshire Valley\") into the zone the\n-- guides use (\"Elwynn Forest\"); see CoAZones.lua. Stock clients get GetRealZoneText() unchanged.\nlocal GetRealZoneText = function() return ZGV.GetPlayerZoneText and ZGV.GetPlayerZoneText() or _G.GetRealZoneText() end\nif not ZGV then return end\nlocal L = ZGV.L"
+    }
+   ],
+   "Item-ItemScore.lua": [
+    {
+     "old": "local function class_can_use_standard_family(classToken, family, level)\n\tif not classToken or not family then return nil end\n\tif STANDARD_WEAPON_FAMILIES[family] then\n\t\tlocal classFamilies = CLASS_WEAPON_FAMILIES[classToken]",
+     "new": "local function class_can_use_standard_family(classToken, family, level)\n\tif not classToken or not family then return nil end\n\t-- Classes this table does not know (server-custom classes such as Conquest of\n\t-- Azeroth's) answer from the character's own armor/weapon skills. Families that\n\t-- are not a skill (relics, jewelry...) and an unread skill list stay undecided.\n\tif not CLASS_MAX_ARMOR_FAMILY[classToken] and not CLASS_WEAPON_FAMILIES[classToken] then\n\t\tlocal skills = ItemScore.Skills\n\t\tif not (skills and next(skills)) or not (ItemScore.SkillNames and ItemScore.SkillNames[family]) then return nil end\n\t\treturn skills[family] ~= nil\n\tend\n\tif STANDARD_WEAPON_FAMILIES[family] then\n\t\tlocal classFamilies = CLASS_WEAPON_FAMILIES[classToken]"
+    },
+    {
+     "old": "\n\tlocal message = (\"Gear Advisor: Unknown class/spec detected (%s %s). Gear scoring has been set to Custom weights. You can adjust Custom weights in Gear Advisor > Stat Weights.\"):format(tostring(originalClass or \"unknown\"), tostring(originalBuild or \"?\"))\n\tif ZGV and ZGV.Print then\n\t\tZGV:Print(message)",
+     "new": "\n\tlocal message = (\"Gear Advisor: Unknown class/spec detected (%s %s). Gear scoring has been set to Custom weights. You can adjust Custom weights in Gear Advisor > Stat Weights.\"):format(tostring(originalClass or \"unknown\"), tostring(originalBuild or \"?\"))\n\tif reason == \"coa_class\" and self.CoAClass then\n\t\tlocal specName = self.CoAClass.specs[tonumber(originalBuild) or 1]\n\t\tmessage = (\"Gear Advisor: scoring gear with Conquest of Azeroth %s weights (%s spec). Change spec in Gear Advisor > Stat Weights, or with /zdps, /ztank or /zheal.\"):format(self.CoAClass.name, specName and specName.name or \"?\")\n\tend\n\tif ZGV and ZGV.Print then\n\t\tZGV:Print(message)"
+    },
+    {
+     "old": "\t\t\tlocal types = rule[\"itemtypes\"]\n\n\t\t\tstats.DAMAGE_PER_SECOND = stats.DPS stats.DPS = nil -- Switch DPS to the full string.\n\n\t\t\t-- players use only final armor types, so no fallbacks to lower ones anymore",
+     "new": "\t\t\tlocal types = rule[\"itemtypes\"]\n\n\t\t\t-- Switch DPS to the full string. Only when the short key is used: the shipped\n\t\t\t-- rules already say DAMAGE_PER_SECOND, and copying a nil DPS over it erased\n\t\t\t-- every class's weapon-DPS weight.\n\t\t\tif stats.DPS ~= nil then stats.DAMAGE_PER_SECOND = stats.DPS stats.DPS = nil end\n\n\t\t\t-- players use only final armor types, so no fallbacks to lower ones anymore"
+    },
+    {
+     "old": "\nfunction ItemScore:GetFallbackBuildForClass(classToken)\n\tif not self:IsKnownWeightClass(classToken) then return 1 end\n\treturn (classToken and self.LevelingBuildFallback[classToken]) or 1",
+     "new": "\nfunction ItemScore:GetFallbackBuildForClass(classToken)\n\tif classToken == \"CUSTOM\" and self.CoAClass then return self:GetCoADefaultBuild() end\n\tif not self:IsKnownWeightClass(classToken) then return 1 end\n\treturn (classToken and self.LevelingBuildFallback[classToken]) or 1"
+    },
+    {
+     "old": "\nfunction ItemScore:DetectActiveBuild(classToken, level)\n\tlocal fallbackBuild = self:GetFallbackBuildForClass(classToken)\n\tlocal classRules = classToken and self.rules and self.rules[classToken]",
+     "new": "\nfunction ItemScore:DetectActiveBuild(classToken, level)\n\t-- CoA specs are not WotLK talent trees, so tree points say nothing about them;\n\t-- start from the primary-stat spec and let the user's choice override it.\n\tif classToken == \"CUSTOM\" and self.CoAClass then\n\t\treturn self:GetCoADefaultBuild(), false\n\tend\n\tlocal fallbackBuild = self:GetFallbackBuildForClass(classToken)\n\tlocal classRules = classToken and self.rules and self.rules[classToken]"
+    },
+    {
+     "old": "\tif role == \"healer\" or role == \"support\" or role == \"sup\" then role = \"heal\" end\n\tlocal classToken = self.playerclass or select(2, UnitClass(\"player\"))\n\tlocal state = self:GetTalentState(classToken, self.playerlevel or UnitLevel(\"player\"))\n\tlocal tree = tonumber(state and state.bestTree)",
+     "new": "\tif role == \"healer\" or role == \"support\" or role == \"sup\" then role = \"heal\" end\n\tlocal classToken = self.playerclass or select(2, UnitClass(\"player\"))\n\tif classToken == \"CUSTOM\" and self.CoAClass then\n\t\tlocal build = self:GetCoARoleBuild(role)\n\t\tif build then return build end\n\t\treturn nil, (\"No %s spec is available for %s.\"):format(role, tostring(self.CoAClass.name))\n\tend\n\tlocal state = self:GetTalentState(classToken, self.playerlevel or UnitLevel(\"player\"))\n\tlocal tree = tonumber(state and state.bestTree)"
+    },
+    {
+     "old": "\t\tself.unknownServerClassToken = originalClassToken\n\t\tself.unknownServerClassName = originalClassName\n\t\tself.playerclass = self:GetCustomClassToken()\n\t\tself.playerclassName = \"Custom\"\n\tend\n\tself.playerclassNum = (self.playerclass and ZGV.ClassToNumber and ZGV.ClassToNumber[self.playerclass]) or self:GetCustomClassID()",
+     "new": "\t\tself.unknownServerClassToken = originalClassToken\n\t\tself.unknownServerClassName = originalClassName\n\t\tif self.ApplyCoAClassRules then self:ApplyCoAClassRules() end\n\t\tself.playerclass = self:GetCustomClassToken()\n\t\tself.playerclassName = self.CoAClass and self.CoAClass.name or \"Custom\"\n\tend\n\tself.playerclassNum = (self.playerclass and ZGV.ClassToNumber and ZGV.ClassToNumber[self.playerclass]) or self:GetCustomClassID()"
+    },
+    {
+     "old": "\n\tif usingCustomClassFallback then\n\t\tself:NotifyCustomWeightFallback(originalClassToken, active_set, \"unknown_class\")\n\tend\n",
+     "new": "\n\tif usingCustomClassFallback then\n\t\tself:NotifyCustomWeightFallback(originalClassToken, active_set, self.CoAClass and \"coa_class\" or \"unknown_class\")\n\tend\n"
+    }
+   ],
+   "Libs/Astrolabe/Astrolabe.lua": [
+    {
+     "old": "\t\t\tend\n\t\tend\n\t\tlocal C, Z = GetCurrentMapContinent(), GetCurrentMapZone();\n\t\tif ( C ~= lastCont or Z ~= lastZone ) then\n\t\t\tsafe_SetMapZoom(lastCont, lastZone); --set map zoom back to what it was before",
+     "new": "\t\t\tend\n\t\tend\n\t\tlocal C, Z = GetCurrentMapContinentAndZone();\n\t\tif ( C ~= lastCont or Z ~= lastZone ) then\n\t\t\tsafe_SetMapZoom(lastCont, lastZone); --set map zoom back to what it was before"
+    },
+    {
+     "old": "\tlocal c,z = GetCurrentMapContinent(), GetCurrentMapZone()\n\tif c==-1 and z==0 and GetMapInfo()==\"ScarletEnclave\" then c,z=5,1 end\n\treturn c,z\nend",
+     "new": "\tlocal c,z = GetCurrentMapContinent(), GetCurrentMapZone()\n\tif c==-1 and z==0 and GetMapInfo()==\"ScarletEnclave\" then c,z=5,1 end\n\t-- Conquest of Azeroth clients can report a map ID (e.g. 1241 for Sunstrider Isle)\n\t-- where the zone index belongs; translate it back through the map file name.\n\tlocal zones = Astrolabe.ContinentList and Astrolabe.ContinentList[c]\n\tif type(zones)==\"table\" and z and z>#zones then\n\t\tlocal file = GetMapInfo()\n\t\tz = 0\n\t\tfor index,name in ipairs(zones) do if name==file then z=index break end end\n\tend\n\treturn c,z\nend"
+    },
+    {
+     "old": "setmetatable(WorldMapSize, zeroData);\n\nfor continent, zones in pairs(Astrolabe.ContinentList) do\n\tlocal mapData = WorldMapSize[continent];\n\tfor index, mapName in pairs(zones) do\n\t\t--print (index,mapName)\n\t\tif not ( mapData.zoneData[mapName] ) then\n\t\t\t--WE HAVE A PROBLEM!!!\n\t\t\tChatFrame1:AddMessage(\"Astrolabe is missing data for \"..select(index, GetMapZones(continent))..\".\");\n\t\t\tmapData.zoneData[mapName] = zeroData;\n\t\tend\n\t\tmapData[index] = mapData.zoneData[mapName];\n\tend\n\tmapData.zoneData = nil;\nend\n",
+     "new": "setmetatable(WorldMapSize, zeroData);\n\n-- Conquest of Azeroth clients list extra map files (starting-area, cave and custom\n-- zone maps, often lowercased). Resolve them from the client's own WorldMapArea\n-- data first, then by case-insensitive match against the stock names.\nlocal function FindZoneData(continent, zoneData, mapName)\n\tlocal data = zoneData[mapName]\n\tif data or type(mapName) ~= \"string\" then return data end\n\tlocal lowered = mapName:lower()\n\tlocal coa = ZygorAstrolabeCoAZoneData and ZygorAstrolabeCoAZoneData[continent]\n\tif coa and coa[lowered] then\n\t\tAstrolabe.UsesCoAZoneData = true -- lets the rest of the addon know it runs on a CoA client\n\t\treturn coa[lowered]\n\tend\n\tfor name, candidate in pairs(zoneData) do\n\t\tif type(name) == \"string\" and name:lower() == lowered then return candidate end\n\tend\nend\n\nAstrolabe.MissingZoneData = {}\nfor continent, zones in pairs(Astrolabe.ContinentList) do\n\tlocal mapData = WorldMapSize[continent];\n\tfor index, mapName in pairs(zones) do\n\t\t--print (index,mapName)\n\t\tlocal data = rawget(mapData, \"zoneData\") and FindZoneData(continent, mapData.zoneData, mapName)\n\t\tif data then\n\t\t\tmapData.zoneData[mapName] = data\n\t\telseif rawget(mapData, \"zoneData\") then\n\t\t\t--WE HAVE A PROBLEM!!!\n\t\t\t-- Recorded rather than printed: CoA clients list maps (minigames, instanced\n\t\t\t-- islands) that have no place on a continent, and a line each is chat spam.\n\t\t\ttable.insert(Astrolabe.MissingZoneData, (select(index, GetMapZones(continent))) or tostring(mapName))\n\t\t\tmapData.zoneData[mapName] = zeroData;\n\t\tend\n\t\tmapData[index] = rawget(mapData, \"zoneData\") and mapData.zoneData[mapName] or zeroData;\n\tend\n\tif rawget(mapData, \"zoneData\") then mapData.zoneData = nil; end\nend\n"
+    }
+   ],
+   "Libs/Astrolabe/Load.xml": [
+    {
+     "old": "\t<Script file=\"DongleStub.lua\"/>\n\t<Script file=\"AstrolabeMapMonitor.lua\"/>\n\t<Script file=\"Astrolabe.lua\"/>\n</Ui>",
+     "new": "\t<Script file=\"DongleStub.lua\"/>\n\t<Script file=\"AstrolabeMapMonitor.lua\"/>\n\t<Script file=\"AstrolabeCoAData.lua\"/>\n\t<Script file=\"Astrolabe.lua\"/>\n</Ui>"
+    }
+   ],
+   "Libs/LibRover-1.0/LibRover-1.0.lua": [
+    {
+     "old": "\t\t\t\t-- guess region by subzonetext, if any region matches that.\n\t\t\t\tif self.startnode.player then\n\t\t\t\t\tself.startnode.zone=BZR[GetZoneText()] or GetZoneText() or \"\"\n\t\t\t\t\tself.startnode.realzone=BZR[GetRealZoneText()] or GetRealZoneText() or \"\"\n\t\t\t\t\tself.startnode.subzone=BZR[GetSubZoneText()] or GetSubZoneText() or \"\"\n\t\t\t\t\tself.startnode.minizone=BZR[GetMinimapZoneText()] or GetMinimapZoneText() or \"\"\n\t\t\t\t\tself.startnode.indoors=IsIndoors()",
+     "new": "\t\t\t\t-- guess region by subzonetext, if any region matches that.\n\t\t\t\tif self.startnode.player then\n\t\t\t\t\tlocal zone, realzone, subzone = GetZoneText(), GetRealZoneText(), GetSubZoneText()\n\t\t\t\t\t-- Conquest of Azeroth reports sub-maps such as Northshire Valley as zones;\n\t\t\t\t\t-- restore the stock layout (zone Elwynn Forest, subzone Northshire Valley).\n\t\t\t\t\tlocal coaParent = ZGV.GetCoAParentZone and ZGV.GetCoAParentZone(realzone)\n\t\t\t\t\tif coaParent then\n\t\t\t\t\t\tif not subzone or subzone == \"\" then subzone = realzone end\n\t\t\t\t\t\tzone, realzone = coaParent, coaParent\n\t\t\t\t\tend\n\t\t\t\t\tself.startnode.zone=BZR[zone] or zone or \"\"\n\t\t\t\t\tself.startnode.realzone=BZR[realzone] or realzone or \"\"\n\t\t\t\t\tself.startnode.subzone=BZR[subzone] or subzone or \"\"\n\t\t\t\t\tself.startnode.minizone=BZR[GetMinimapZoneText()] or GetMinimapZoneText() or \"\"\n\t\t\t\t\tself.startnode.indoors=IsIndoors()"
+    },
+    {
+     "old": "\n\t\tfunction Lib:GetPlayerPosition()\n\t\t\tlocal map = C_Map.GetBestMapForUnit(\"player\")\n\t\t\tlocal instance = ZGV.db.char.fakeinstance or select(8,GetInstanceInfo())\n\t\t\tif not map and instance and Lib.data.InstanceMaps[instance] then ",
+     "new": "\n\t\tfunction Lib:GetPlayerPosition()\n\t\t\t-- Conquest of Azeroth's native C_Map numbers maps with its own IDs, not the ones this\n\t\t\t-- data uses; there, take the position Zygor places on its own zones (CoAZones.lua).\n\t\t\tlocal coaMap, coaX, coaY\n\t\t\tif ZGV.GetCoAPlayerMapPosition then coaMap, coaX, coaY = ZGV.GetCoAPlayerMapPosition() end\n\t\t\tlocal map\n\t\t\tif coaMap == nil then map = C_Map.GetBestMapForUnit(\"player\") elseif coaMap then map = coaMap end\n\t\t\tlocal instance = ZGV.db.char.fakeinstance or select(8,GetInstanceInfo())\n\t\t\tif not map and instance and Lib.data.InstanceMaps[instance] then "
+    },
+    {
+     "old": "\t\t\tlocal remap = LibRover.data.RemapData\n\n\t\t\tlocal pos,pos_y = C_Map.GetPlayerMapPosition(map,\"player\")\n\t\t\tlocal x,y\n\t\t\t\n\t\t\tif type(pos)==\"table\" then\n\t\t\t\tx,y=pos.x,pos.y",
+     "new": "\t\t\tlocal remap = LibRover.data.RemapData\n\n\t\t\tlocal pos,pos_y\n\t\t\tif coaMap then pos,pos_y = coaX,coaY else pos,pos_y = C_Map.GetPlayerMapPosition(map,\"player\") end\n\t\t\tlocal x,y\n\n\t\t\tif type(pos)==\"table\" then\n\t\t\t\tx,y=pos.x,pos.y"
+    }
+   ],
+   "MapCoords.lua": [
+    {
+     "old": "---------------------------------------------------------------------------\nfunction ZGV.GetCurrentMapID()\n\tlocal currentmap = C_Map.GetBestMapForUnit(\"player\")\n\tif not currentmap then return 0 end",
+     "new": "---------------------------------------------------------------------------\nfunction ZGV.GetCurrentMapID()\n\t-- Conquest of Azeroth's native C_Map uses its own map IDs; see CoAZones.lua.\n\tlocal coaMap = ZGV.GetCoAPlayerMapPosition and ZGV.GetCoAPlayerMapPosition()\n\tif coaMap ~= nil then return coaMap or 0 end\n\tlocal currentmap = C_Map.GetBestMapForUnit(\"player\")\n\tif not currentmap then return 0 end"
+    }
+   ],
+   "MapSpotSet.lua": [
+    {
+     "old": "local ZGV = ZygorGuidesViewer ; if not ZGV then return end\n\nlocal table,string,tonumber,ipairs,pairs,setmetatable,tinsert = table,string,tonumber,ipairs,pairs,setmetatable,tinsert",
+     "new": "local ZGV = ZygorGuidesViewer ; if not ZGV then return end\n-- Conquest of Azeroth: fold CoA sub-map zones (e.g. \"Northshire Valley\") into the zone the\n-- guides use (\"Elwynn Forest\"); see CoAZones.lua. Stock clients get GetRealZoneText() unchanged.\nlocal GetRealZoneText = function() return ZGV.GetPlayerZoneText and ZGV.GetPlayerZoneText() or _G.GetRealZoneText() end\n\nlocal table,string,tonumber,ipairs,pairs,setmetatable,tinsert = table,string,tonumber,ipairs,pairs,setmetatable,tinsert"
+    }
+   ],
+   "Parser.lua": [
+    {
+     "old": "if not me then return end\nlocal ZGV=me\n\nlocal L = ZygorGuidesViewer_L(\"Main\")",
+     "new": "if not me then return end\nlocal ZGV=me\n-- Conquest of Azeroth: fold CoA sub-map zones (e.g. \"Northshire Valley\") into the zone the\n-- guides use (\"Elwynn Forest\"); see CoAZones.lua. Stock clients get GetRealZoneText() unchanged.\nlocal GetRealZoneText = function() return ZGV.GetPlayerZoneText and ZGV.GetPlayerZoneText() or _G.GetRealZoneText() end\n\nlocal L = ZygorGuidesViewer_L(\"Main\")"
+    }
+   ],
+   "Pointer.lua": [
+    {
+     "old": "\nlocal ZGV=ZygorGuidesViewer\nlocal Pointer = {}\nZGV.Pointer = Pointer",
+     "new": "\nlocal ZGV=ZygorGuidesViewer\n-- Conquest of Azeroth: fold CoA sub-map zones (e.g. \"Northshire Valley\") into the zone the\n-- guides use (\"Elwynn Forest\"); see CoAZones.lua. Stock clients get GetRealZoneText() unchanged.\nlocal GetRealZoneText = function() return ZGV.GetPlayerZoneText and ZGV.GetPlayerZoneText() or _G.GetRealZoneText() end\nlocal Pointer = {}\nZGV.Pointer = Pointer"
+    }
+   ],
+   "Waypoints.lua": [
+    {
+     "old": "\nlocal ZGV=ZygorGuidesViewer\nlocal L = ZGV.L\nlocal BZL = ZGV.BZL",
+     "new": "\nlocal ZGV=ZygorGuidesViewer\n-- Conquest of Azeroth: fold CoA sub-map zones (e.g. \"Northshire Valley\") into the zone the\n-- guides use (\"Elwynn Forest\"); see CoAZones.lua. Stock clients get GetRealZoneText() unchanged.\nlocal GetRealZoneText = function() return ZGV.GetPlayerZoneText and ZGV.GetPlayerZoneText() or _G.GetRealZoneText() end\nlocal L = ZGV.L\nlocal BZL = ZGV.BZL"
+    },
+    {
+     "old": "\t\t\tlocal contid,zoneid\n\t\t\tcontid,zoneid = self:GetMapZoneNumbers(goal.map)  -- localized already on load\n\t\t\t--self:Print(\"contid:\"..(contid or 'nil')..\" zoneid:\"..(zoneid or 'nil'))\n\t\t\tlocal way = TomTom:AddZWaypoint(",
+     "new": "\t\t\tlocal contid,zoneid\n\t\t\tcontid,zoneid = self:GetMapZoneNumbers(goal.map)  -- localized already on load\n\t\t\t-- TomTom on Ascension/CoA clients numbers zones by map area ID (TomTom:ZoneID, added for CoA).\n\t\t\tif TomTom.ZoneID and contid and zoneid then zoneid = TomTom:ZoneID(contid, zoneid) end\n\t\t\t--self:Print(\"contid:\"..(contid or 'nil')..\" zoneid:\"..(zoneid or 'nil'))\n\t\t\tlocal way = TomTom:AddZWaypoint("
+    },
+    {
+     "old": "function me:CreateTomTomWaypointCZXY(contid,zoneid,x,y,title,arrow)\n\tself:Debug(x..' '..y)\n\tlocal way = TomTom:AddZWaypoint(\n\t\tcontid, zoneid,",
+     "new": "function me:CreateTomTomWaypointCZXY(contid,zoneid,x,y,title,arrow)\n\tself:Debug(x..' '..y)\n\t-- TomTom on Ascension/CoA clients numbers zones by map area ID (TomTom:ZoneID, added for CoA).\n\tif TomTom.ZoneID and contid and zoneid then zoneid = TomTom:ZoneID(contid, zoneid) end\n\tlocal way = TomTom:AddZWaypoint(\n\t\tcontid, zoneid,"
+    }
+   ]
+  },
+  "copy": [
+   "CoAZones.lua",
+   "Data-WOTLK/CoA-ClassSpecs.lua",
+   "Libs/Astrolabe/AstrolabeCoAData.lua",
+   "ZygorTalentAdvisorCOA/files.xml",
+   "ZygorTalentAdvisorCOA/Data.lua",
+   "ZygorTalentAdvisorCOA/ZygorTalentAdvisorCOA.lua",
+   "ZygorTalentAdvisorCOA/Popout.lua",
+   "ZygorTalentAdvisorCOA/Overlay.lua"
+  ]
+ },
+ "tomtom": {
+  "edit": {
+   "TomTom.lua": [
+    {
+     "old": "\nfunction TomTom:ReloadWaypoints()\n\tlocal pc, pz = GetCurrentMapContinent(), GetCurrentMapZone()\n\n\tfor uid,value in pairs(waypoints) do",
+     "new": "\nfunction TomTom:ReloadWaypoints()\n\tlocal pc, pz = TomTom:CurrentCZ()\n\n\tfor uid,value in pairs(waypoints) do"
+    },
+    {
+     "old": "\n\t\t-- Actually try to add a note\n\t\tlocal c,z = GetCurrentMapContinent(), GetCurrentMapZone()\n\t\tlocal x,y = GetCurrentCursorPosition()\n",
+     "new": "\n\t\t-- Actually try to add a note\n\t\tlocal c,z = TomTom:CurrentCZ()\n\t\tlocal x,y = GetCurrentCursorPosition()\n"
+    },
+    {
+     "old": "-- TODO: Make this not suck\nfunction TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)\n\tlocal c,z = GetCurrentMapContinent(), GetCurrentMapZone()\n\n\tif not c or not z or c < 1 then",
+     "new": "-- TODO: Make this not suck\nfunction TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)\n\tlocal c,z = TomTom:CurrentCZ()\n\n\tif not c or not z or c < 1 then"
+    },
+    {
+     "old": "local reverseMapFileC = {}\nlocal reverseMapFileZ = {}\nfor C = 1, #Astrolabe.ContinentList do\n\tfor Z = 1, #Astrolabe.ContinentList[C] do\n\t\tlocal mapFile = Astrolabe.ContinentList[C][Z]\n\t\treverseMapFileC[mapFile] = C\n\t\treverseMapFileZ[mapFile] = Z\n\tend\nend",
+     "new": "local reverseMapFileC = {}\nlocal reverseMapFileZ = {}\n\n-- Ascension-based clients (Conquest of Azeroth among them) ship their own Astrolabe-0.4 in\n-- Interface\\LibraryXML, registered with an infinite version so it replaces TomTom's copy.\n-- It identifies zones by map area ID (GetCurrentMapAreaID) rather than by the zone's index\n-- in GetMapZones(), so translate between the two. On other clients nothing changes.\nlocal zoneAreaIDs, areaMapFiles = {}, {}\nlocal usesAreaIDs = GetCurrentMapAreaID ~= nil and Astrolabe.GetVersion ~= nil\n\tand select(2, Astrolabe:GetVersion()) == math.huge\nif usesAreaIDs then\n\tfor C, zones in pairs(Astrolabe.ContinentList) do\n\t\tif type(C) == \"number\" and type(zones) == \"table\" then\n\t\t\tzoneAreaIDs[C] = {}\n\t\t\tfor Z, mapFile in ipairs(zones) do\n\t\t\t\tSetMapZoom(C, Z)\n\t\t\t\tlocal areaID = GetCurrentMapAreaID()\n\t\t\t\tzoneAreaIDs[C][Z] = areaID\n\t\t\t\tareaMapFiles[areaID] = mapFile\n\t\t\tend\n\t\tend\n\tend\n\tSetMapToCurrentZone()\n\n\t-- That Astrolabe's ComputeDistance gives up whenever either delta is exactly zero. Small\n\t-- player movements often leave one map coordinate unchanged between updates, and its\n\t-- incremental minimap update then removes every icon: the TomTom arrow vanishes a moment\n\t-- after the player starts moving. Fill in only those cases, from the same world positions.\n\tif C_WorldMap and C_WorldMap.GetWorldPosition and not Astrolabe.TomTomZeroDeltaFix then\n\t\tlocal computeDistance = Astrolabe.ComputeDistance\n\t\tAstrolabe.ComputeDistance = function(self, c1, z1, x1, y1, c2, z2, x2, y2)\n\t\t\tlocal dist, xDelta, yDelta = computeDistance(self, c1, z1, x1, y1, c2, z2, x2, y2)\n\t\t\tif dist or not (x1 and y1 and x2 and y2) then return dist, xDelta, yDelta end\n\t\t\tlocal wx1, wy1 = C_WorldMap.GetWorldPosition(z1 or 0, x1, y1)\n\t\t\tlocal wx2, wy2 = C_WorldMap.GetWorldPosition(z2 or 0, x2, y2)\n\t\t\tif not (wx1 and wy1 and wx2 and wy2) then return nil end\n\t\t\txDelta, yDelta = wx2 - wx1, wy2 - wy1\n\t\t\treturn math.sqrt(xDelta * xDelta + yDelta * yDelta), xDelta, yDelta\n\t\tend\n\t\tAstrolabe.TomTomZeroDeltaFix = true\n\tend\nend\n\n-- Zone number in the form the active Astrolabe expects, from a GetMapZones() index.\nfunction TomTom:ZoneID(C, Z)\n\tif usesAreaIDs and Z and Z > 0 then\n\t\treturn zoneAreaIDs[C] and zoneAreaIDs[C][Z]\n\tend\n\treturn Z\nend\n\n-- Continent and zone number of the map currently shown (zone 0 on a continent map).\nfunction TomTom:CurrentCZ()\n\tlocal C, Z = GetCurrentMapContinent(), GetCurrentMapZone()\n\tif usesAreaIDs and Z and Z > 0 then Z = GetCurrentMapAreaID() end\n\treturn C, Z\nend\n\nfor C = 1, #Astrolabe.ContinentList do\n\tfor Z = 1, #Astrolabe.ContinentList[C] do\n\t\tlocal mapFile = Astrolabe.ContinentList[C][Z]\n\t\treverseMapFileC[mapFile] = C\n\t\treverseMapFileZ[mapFile] = TomTom:ZoneID(C, Z)\n\tend\nend"
+    },
+    {
+     "old": "\tif Z == 0 then\n\t\treturn continentMapFile[C]\n\telseif C > 0 then\n\t\treturn Astrolabe.ContinentList[C][Z]",
+     "new": "\tif Z == 0 then\n\t\treturn continentMapFile[C]\n\telseif usesAreaIDs then\n\t\treturn areaMapFiles[Z]\n\telseif C > 0 then\n\t\treturn Astrolabe.ContinentList[C][Z]"
+    },
+    {
+     "old": "    function Block_OnClick(self, button, down) \n        local c,z,x,y = Astrolabe:GetCurrentPlayerPosition() \n        local zone = TomTom:GetMapFile(c, z)\t\n        local desc = format(\"%s: %.2f, %.2f\", zone, x*100, y*100) \n        TomTom:AddZWaypoint(c, z, x*100, y*100, desc) ",
+     "new": "    function Block_OnClick(self, button, down) \n        local c,z,x,y = Astrolabe:GetCurrentPlayerPosition() \n        if not (c and z and x and y) then return end\n        local zone = TomTom:GetMapFile(c, z) or GetRealZoneText() or \"?\"\n        local desc = format(\"%s: %.2f, %.2f\", zone, x*100, y*100) \n        TomTom:AddZWaypoint(c, z, x*100, y*100, desc) "
+    },
+    {
+     "old": "for cidx,c in ipairs{GetMapContinents()} do\n\tfor zidx,z in ipairs{GetMapZones(cidx)} do\n\t\tzlist[z:lower():gsub(\"[%L]\", \"\")] = {cidx, zidx, z}\n\tend\nend",
+     "new": "for cidx,c in ipairs{GetMapContinents()} do\n\tfor zidx,z in ipairs{GetMapZones(cidx)} do\n\t\tzlist[z:lower():gsub(\"[%L]\", \"\")] = {cidx, TomTom:ZoneID(cidx, zidx), z}\n\tend\nend"
+    }
+   ],
+   "TomTom_Corpse.lua": [
+    {
+     "old": "\t\t\t\tx = cx\n\t\t\t\ty = cy\n\t\t\t\tz = i\n\t\t\t\tbreak\n\t\t\tend",
+     "new": "\t\t\t\tx = cx\n\t\t\t\ty = cy\n\t\t\t\tz = TomTom:ZoneID(c, i)\n\t\t\t\tbreak\n\t\t\tend"
+    },
+    {
+     "old": "\t\t-- Cheat a bit and avoid the map flipping\n\t\tSetMapToCurrentZone()\n\t\tc = GetCurrentMapContinent()\n\t\tz = GetCurrentMapZone()\n\t\tif not IsInInstance() then\n\t\t\tx,y = GetPlayerMapPosition(\"player\")",
+     "new": "\t\t-- Cheat a bit and avoid the map flipping\n\t\tSetMapToCurrentZone()\n\t\tc, z = TomTom:CurrentCZ()\n\t\tif not IsInInstance() then\n\t\t\tx,y = GetPlayerMapPosition(\"player\")"
+    }
+   ],
+   "TomTom_POIIntegration.lua": [
+    {
+     "old": "\nlocal function setQuestWaypoint(self)\n    local c, z = GetCurrentMapContinent(), GetCurrentMapZone();\n    local x, y = POIAnchorToCoord(self)\n",
+     "new": "\nlocal function setQuestWaypoint(self)\n    local c, z = TomTom:CurrentCZ();\n    local x, y = POIAnchorToCoord(self)\n"
+    }
+   ]
+  },
+  "copy": []
+ }
+}

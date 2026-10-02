@@ -1,0 +1,171 @@
+local ZGV = ZygorGuidesViewer
+if not ZGV then return end
+
+local Hover = {
+	delay = 0.075,
+	active = false,
+	pending = nil,
+	elapsed = 0,
+}
+ZGV.GuideMenuHover = Hover
+
+local timer = CreateFrame("Frame", nil, UIParent)
+timer:Hide()
+
+local function PointerIsWithin(frame)
+	local focus = GetMouseFocus and GetMouseFocus() or nil
+	while focus do
+		if focus == frame then return true end
+		focus = focus.GetParent and focus:GetParent() or nil
+	end
+	return false
+end
+
+function Hover:Cancel(button)
+	if button and self.pending ~= button then return end
+	self.pending = nil
+	self.elapsed = 0
+	timer:Hide()
+end
+
+function Hover:SetActive(active)
+	self:Cancel()
+	self.active = active and true or false
+end
+
+function Hover:Schedule(button)
+	self.pending = button
+	self.elapsed = 0
+	timer:Show()
+end
+
+function Hover:OnUpdate(elapsed)
+	local button = self.pending
+	if not button then timer:Hide() return end
+	self.elapsed = self.elapsed + (elapsed or 0)
+	if self.elapsed < self.delay then return end
+	self:Cancel(button)
+	if not self.active or not button.IsShown or not button:IsShown() or not PointerIsWithin(button) then return end
+	local original = button._zgvGuideMenuOriginalEnter
+	if original then original(button) end
+	local parent = button.GetParent and button:GetParent() or nil
+	local level = parent and parent.GetID and parent:GetID() or nil
+	if level then
+		self:ApplyLevel(level + 1)
+		self:RepositionLevel(level + 1)
+	end
+end
+
+timer:SetScript("OnUpdate", function(_, elapsed) Hover:OnUpdate(elapsed) end)
+
+function Hover:WrapButton(button)
+	if not button or button._zgvGuideMenuHoverWrapped then return end
+	local originalEnter = button:GetScript("OnEnter")
+	local originalLeave = button:GetScript("OnLeave")
+	if not originalEnter then return end
+
+	button._zgvGuideMenuHoverWrapped = true
+	button._zgvGuideMenuOriginalEnter = originalEnter
+	button._zgvGuideMenuOriginalLeave = originalLeave
+	button:SetScript("OnEnter", function(btn)
+		if not Hover.active or not btn.hasArrow then
+			Hover:Cancel()
+			return originalEnter(btn)
+		end
+		if btn.Highlight then btn.Highlight:Show() end
+		if UIDropDownMenu_StopCounting then UIDropDownMenu_StopCounting(btn:GetParent()) end
+		Hover:Schedule(btn)
+	end)
+	button:SetScript("OnLeave", function(btn)
+		Hover:Cancel(btn)
+		if originalLeave then originalLeave(btn) end
+	end)
+
+	local name = button.GetName and button:GetName() or nil
+	local arrow = name and _G[name.."ExpandArrow"] or nil
+	if arrow and not arrow._zgvGuideMenuHoverWrapped then
+		local arrowEnter = arrow:GetScript("OnEnter")
+		local arrowLeave = arrow:GetScript("OnLeave")
+		arrow._zgvGuideMenuHoverWrapped = true
+		arrow:SetScript("OnEnter", function(expand)
+			if not Hover.active then
+				if arrowEnter then arrowEnter(expand) end
+				return
+			end
+			local parent = expand:GetParent()
+			local enter = parent and parent:GetScript("OnEnter")
+			if enter then enter(parent) end
+		end)
+		arrow:SetScript("OnLeave", function(expand)
+			if not Hover.active then
+				if arrowLeave then arrowLeave(expand) end
+				return
+			end
+			local parent = expand:GetParent()
+			local leave = parent and parent:GetScript("OnLeave")
+			if leave then leave(parent) end
+		end)
+	end
+end
+
+function Hover:ApplyLevel(level)
+	local list = _G["DropDownList"..tostring(level or 1)]
+	if not list then return end
+	local count = list.numButtons or UIDROPDOWNMENU_MAXBUTTONS or 0
+	local listName = list.GetName and list:GetName() or ("DropDownList"..tostring(level or 1))
+	for index=1,count do
+		self:WrapButton(_G[listName.."Button"..index])
+	end
+end
+
+function Hover:RepositionLevel(level)
+	level = tonumber(level)
+	if not level or level <= 1 then return end
+	local list = _G["DropDownList"..level]
+	local parent = _G["DropDownList"..(level - 1)]
+	if not list or not parent or not list.IsShown or not list:IsShown() then return end
+	if not (list.GetWidth and list.GetTop and parent.GetLeft and parent.GetRight) then return end
+
+	local width = list:GetWidth()
+	local top = list:GetTop()
+	local parentLeft, parentRight = parent:GetLeft(), parent:GetRight()
+	if not width or width <= 0 or not top or not parentLeft or not parentRight then return end
+
+	local uiLeft = (UIParent.GetLeft and UIParent:GetLeft()) or 0
+	local uiRight = (UIParent.GetRight and UIParent:GetRight()) or (GetScreenWidth and GetScreenWidth())
+	if not uiRight then return end
+
+	local gap, pad = 2, 6
+	local rightSpace = uiRight - parentRight - pad
+	local leftSpace = parentLeft - uiLeft - pad
+	local side = parent._zgvGuideMenuSide
+	if side == "right" and rightSpace < width + gap then side = nil end
+	if side == "left" and leftSpace < width + gap then side = nil end
+	if not side then
+		if rightSpace >= width + gap or rightSpace >= leftSpace then
+			side = "right"
+		else
+			side = "left"
+		end
+	end
+
+	local x
+	if side == "right" then
+		x = math.min(parentRight + gap, uiRight - width - pad)
+	else
+		x = math.max(uiLeft + pad, parentLeft - width - gap)
+	end
+
+	list:ClearAllPoints()
+	list:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, top)
+	list._zgvGuideMenuSide = side
+	if list.SetClampedToScreen then list:SetClampedToScreen(true) end
+end
+
+function Hover:AttachRoot(root)
+	if not root or not root.HookScript or root._zgvGuideMenuHoverHideHook then return end
+	root._zgvGuideMenuHoverHideHook = true
+	root:HookScript("OnHide", function()
+		if Hover.active then Hover:SetActive(false) end
+	end)
+end

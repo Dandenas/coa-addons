@@ -1,0 +1,14 @@
+# Python caches and temporary downloads
+__pycache__/
+*.pyc
+*.new
+
+# Backups made by the patch tools or batch files
+_CoA_backup*/
+_CoA_original/
+
+# Game output that never belongs in the repository
+*.dmp
+Errors/
+Logs/
+WTF/

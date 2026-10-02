@@ -1,0 +1,13 @@
+------------------------------------------------------------------------
+r241 | Cladhaire-15704 | 2010-07-17 11:40:30 +0000 (Sat, 17 Jul 2010) | 1 line
+Changed paths:
+   A /tags/r240-release (from /trunk:240)
+
+Tagging r240-release
+------------------------------------------------------------------------
+r240 | Cladhaire-15704 | 2010-05-06 10:27:01 +0000 (Thu, 06 May 2010) | 1 line
+Changed paths:
+   M /trunk/TomTom_POIIntegration.lua
+
+Remove objective POIs before adding a new one
+------------------------------------------------------------------------

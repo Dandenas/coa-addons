@@ -1,0 +1,54 @@
+## Interface: 30300
+## Notes: Free multi-purpose leveling guide viewer.|n|nDesigned for use with Zygor Guides, but supporting user-supplied guides as well.
+## Note-frFR: 
+## Notes-esES: 
+## Title: |cffffff88Z|cffffee66y|cffffdd44g|cffffcc22o|cffffbb00r|r Guides Viewer Remastered
+## qqqTitle: |cffffff88Z|cffffee66y|cffffdd44g|cffffcc22o|cffffbb00r|r Guides Viewer Remastered |TInterface\AddOns\ZygorGuidesViewerRM\Skin\gnome:48:48:0:0|t
+## Author: Sinus Pi
+## DefaultState: enabled
+## LoadOnDemand: 0
+## SavedVariables: ZygorGuidesViewerSettings,ZygorTalentAdvisorSettings
+## - SavedVariablesPerCharacter: ZygorGuidesViewerSettingsChar
+## OptionalDeps: Cartographer, Cartographer3, TomTom
+## X-Category: 
+## X-Credits: 
+## X-eMail: zygor@zygorguides.com
+## X-Website: http://zygorguides.com/
+## X-License: GPL
+## X-License-Note: Upstream GPL version unspecified; see repository LICENSE.
+## Version: 3.0.253
+
+# Load bundled libraries directly from the TOC. Some 3.3.5a clients do not
+# reliably process the extra nested Include layer in embeds.xml.
+libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceHook-3.0\AceHook-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\LibBabble-Zone-3.0\lib.xml
+Libs\LibBabble-SubZone-3.0\lib.xml
+Libs\LibBabble-Faction-3.0\lib.xml
+Libs\LibBetterBlizzOptions-1.0\lib.xml
+Libs\LibGratuity-3.0\lib.xml
+Libs\LibCamera-1.0\lib.xml
+Libs\LibTaxi-1.0\lib.xml
+Libs\LibRover-1.0\lib.xml
+Libs\Astrolabe\load.xml
+Libs\UIDropDownFork.xml
+Libs\EasyFork.lua
+
+Localization\load.xml
+Localization\names.xml
+Localization\quests.xml
+
+files.xml
+Bindings.xml
+
+Guides\Autoload.xml

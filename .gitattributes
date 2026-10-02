@@ -1,0 +1,3 @@
+# Store every file byte-for-byte: WoW addon files mix CRLF/LF and encodings, and the
+# re-apply kit compares exact bytes, so git must never convert line endings.
+* -text

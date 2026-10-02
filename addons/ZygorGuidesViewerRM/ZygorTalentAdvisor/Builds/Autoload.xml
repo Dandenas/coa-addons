@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<!-- Autoloading of included builds. Add more files here as you please. -->
+	
+	<Script file="ZygorGuidesBuilds.lua"/>
+
+	<!-- Empty build01-build10 slots removed (they only produced "Error loading" lines). Add a Script line for any build file you create. -->
+</Ui>
