@@ -7,4 +7,5 @@
 	<Script file="Overlay.lua"/>
 	<Script file="Preview.lua"/>
 	<Script file="Load.lua"/>
+	<Script file="Options.lua"/>
 </Ui>

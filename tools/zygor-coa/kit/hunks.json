@@ -126,6 +126,38 @@
      "old": "function me:CreateTomTomWaypointCZXY(contid,zoneid,x,y,title,arrow)\n\tself:Debug(x..' '..y)\n\tlocal way = TomTom:AddZWaypoint(\n\t\tcontid, zoneid,",
      "new": "function me:CreateTomTomWaypointCZXY(contid,zoneid,x,y,title,arrow)\n\tself:Debug(x..' '..y)\n\t-- TomTom on Ascension/CoA clients numbers zones by map area ID (TomTom:ZoneID, added for CoA).\n\tif TomTom.ZoneID and contid and zoneid then zoneid = TomTom:ZoneID(contid, zoneid) end\n\tlocal way = TomTom:AddZWaypoint(\n\t\tcontid, zoneid,"
     }
+   ],
+   "Options.lua": [
+    {
+     "old": "\tif self.optionsgear then LibStub(\"AceConfig-3.0\"):RegisterOptionsTable(\"ZygorGuidesViewer-Gear\", self.optionsgear, \"zggear\") end\n\tif self.optionsitemscore then LibStub(\"AceConfig-3.0\"):RegisterOptionsTable(\"ZygorGuidesViewer-ItemScore\", self.optionsitemscore, \"zgitemscore\") end\nend\n",
+     "new": "\tif self.optionsgear then LibStub(\"AceConfig-3.0\"):RegisterOptionsTable(\"ZygorGuidesViewer-Gear\", self.optionsgear, \"zggear\") end\n\tif self.optionsitemscore then LibStub(\"AceConfig-3.0\"):RegisterOptionsTable(\"ZygorGuidesViewer-ItemScore\", self.optionsitemscore, \"zgitemscore\") end\n\t-- CoA Talent Advisor tab (ZygorTalentAdvisorCOA\\Options.lua), for Conquest of Azeroth characters only\n\tlocal ztacoa = ZygorTalentAdvisorCOA\n\tif ztacoa and ztacoa.GetOptionsTable and ztacoa:IsActive() then\n\t\tself.optionsztacoa = ztacoa:GetOptionsTable()\n\t\tLibStub(\"AceConfig-3.0\"):RegisterOptionsTable(ztacoa.OPTIONS_APP, self.optionsztacoa)\n\tend\nend\n"
+    },
+    {
+     "old": "\tif self.optionsgear then self.blizGearPanel = LibStub(\"AceConfigDialog-3.0\"):AddToBlizOptions(\"ZygorGuidesViewer-Gear\", self.optionsgear.name, self.options.name) end\n\tif self.optionsitemscore then self.blizItemScorePanel = LibStub(\"AceConfigDialog-3.0\"):AddToBlizOptions(\"ZygorGuidesViewer-ItemScore\", self.optionsitemscore.name, self.options.name) end\nend\n",
+     "new": "\tif self.optionsgear then self.blizGearPanel = LibStub(\"AceConfigDialog-3.0\"):AddToBlizOptions(\"ZygorGuidesViewer-Gear\", self.optionsgear.name, self.options.name) end\n\tif self.optionsitemscore then self.blizItemScorePanel = LibStub(\"AceConfigDialog-3.0\"):AddToBlizOptions(\"ZygorGuidesViewer-ItemScore\", self.optionsitemscore.name, self.options.name) end\n\tif self.optionsztacoa then self.blizZTACOAPanel = LibStub(\"AceConfigDialog-3.0\"):AddToBlizOptions(ZygorTalentAdvisorCOA.OPTIONS_APP, self.optionsztacoa.name, self.options.name) end\nend\n"
+    }
+   ],
+   "GuideBrowser.lua": [
+    {
+     "old": "}\n\nlocal function BuildGuideManagerOptionsApps(self)\n\tlocal apps = {}\n\tfor _,opt in ipairs(GUIDE_MANAGER_OPTIONS_APPS) do\n\t\ttinsert(apps, opt)\n\tend\n\tif self and self.db and self.db.profile and self.db.profile.debug then",
+     "new": "}\n\n-- CoA Talent Advisor tab (ZygorTalentAdvisorCOA\\Options.lua): listed after Stat Weights when\n-- Options.lua registered it, i.e. on Conquest of Azeroth characters only.\nlocal GUIDE_MANAGER_OPTIONS_ZTACOA = { id = \"ztacoa\", label = \"CoA Talent Advisor\", app = \"ZygorGuidesViewer-TalentAdvisorCOA\", desc = \"Talent panel background, talent tree numbers, and previewing other specs for Conquest of Azeroth classes.\" }\n\nlocal function BuildGuideManagerOptionsApps(self)\n\tlocal apps = {}\n\tfor _,opt in ipairs(GUIDE_MANAGER_OPTIONS_APPS) do\n\t\ttinsert(apps, opt)\n\t\tif opt.id == \"itemscore\" and self and self.optionsztacoa then tinsert(apps, GUIDE_MANAGER_OPTIONS_ZTACOA) end\n\tend\n\tif self and self.db and self.db.profile and self.db.profile.debug then"
+    },
+    {
+     "old": "\t\tif opt.app == appName then return opt end\n\tend\n\tif appName == \"ZygorGuidesViewer-Debug\" then\n\t\treturn { label = LT(\"gb_opt_advanced\"), desc = LT(\"gb_opt_desc_advanced\") }",
+     "new": "\t\tif opt.app == appName then return opt end\n\tend\n\tif appName == GUIDE_MANAGER_OPTIONS_ZTACOA.app then return GUIDE_MANAGER_OPTIONS_ZTACOA end\n\tif appName == \"ZygorGuidesViewer-Debug\" then\n\t\treturn { label = LT(\"gb_opt_advanced\"), desc = LT(\"gb_opt_desc_advanced\") }"
+    },
+    {
+     "old": "\telseif appName==\"ZygorGuidesViewer-About\" then src=self.optionsabout\n\telseif appName==\"ZygorGuidesViewer-Debug\" then src=self.optionsdebug\n\tend\n",
+     "new": "\telseif appName==\"ZygorGuidesViewer-About\" then src=self.optionsabout\n\telseif appName==\"ZygorGuidesViewer-Debug\" then src=self.optionsdebug\n\telseif appName==GUIDE_MANAGER_OPTIONS_ZTACOA.app then src=self.optionsztacoa\n\tend\n"
+    },
+    {
+     "old": "\tactionbuttons = {2,17},\n\tmaps = {2,18},\n}\n",
+     "new": "\tactionbuttons = {2,17},\n\tmaps = {2,18},\n\tzta = {2,15}, -- talent advisor (Skins.lua OptionsIcons.zta)\n}\n"
+    },
+    {
+     "old": "\t[\"ZygorGuidesViewer-Gear\"] = \"gear\",\n\t[\"ZygorGuidesViewer-ItemScore\"] = \"itemscore\",\n}\n",
+     "new": "\t[\"ZygorGuidesViewer-Gear\"] = \"gear\",\n\t[\"ZygorGuidesViewer-ItemScore\"] = \"itemscore\",\n\t[\"ZygorGuidesViewer-TalentAdvisorCOA\"] = \"zta\",\n}\n"
+    }
    ]
   },
   "copy": [
@@ -138,7 +170,8 @@
    "ZygorTalentAdvisorCOA/Popout.lua",
    "ZygorTalentAdvisorCOA/Overlay.lua",
    "ZygorTalentAdvisorCOA/Preview.lua",
-   "ZygorTalentAdvisorCOA/Load.lua"
+   "ZygorTalentAdvisorCOA/Load.lua",
+   "ZygorTalentAdvisorCOA/Options.lua"
   ]
  },
  "tomtom": {

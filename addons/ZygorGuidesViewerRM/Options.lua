@@ -3493,6 +3493,12 @@ function me:Options_SetupConfig()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("ZygorGuidesViewer-Profile", self.optionsprofile, "zgprofile");
 	if self.optionsgear then LibStub("AceConfig-3.0"):RegisterOptionsTable("ZygorGuidesViewer-Gear", self.optionsgear, "zggear") end
 	if self.optionsitemscore then LibStub("AceConfig-3.0"):RegisterOptionsTable("ZygorGuidesViewer-ItemScore", self.optionsitemscore, "zgitemscore") end
+	-- CoA Talent Advisor tab (ZygorTalentAdvisorCOA\Options.lua), for Conquest of Azeroth characters only
+	local ztacoa = ZygorTalentAdvisorCOA
+	if ztacoa and ztacoa.GetOptionsTable and ztacoa:IsActive() then
+		self.optionsztacoa = ztacoa:GetOptionsTable()
+		LibStub("AceConfig-3.0"):RegisterOptionsTable(ztacoa.OPTIONS_APP, self.optionsztacoa)
+	end
 end
 
 function me:Options_SetupBlizConfig()
@@ -3519,6 +3525,7 @@ function me:Options_SetupBlizConfig()
 	self.blizProfilePanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ZygorGuidesViewer-Profile", self.optionsprofile.name, self.options.name)
 	if self.optionsgear then self.blizGearPanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ZygorGuidesViewer-Gear", self.optionsgear.name, self.options.name) end
 	if self.optionsitemscore then self.blizItemScorePanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ZygorGuidesViewer-ItemScore", self.optionsitemscore.name, self.options.name) end
+	if self.optionsztacoa then self.blizZTACOAPanel = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(ZygorTalentAdvisorCOA.OPTIONS_APP, self.optionsztacoa.name, self.options.name) end
 end
 
 function me:EnsureBlizConfig()

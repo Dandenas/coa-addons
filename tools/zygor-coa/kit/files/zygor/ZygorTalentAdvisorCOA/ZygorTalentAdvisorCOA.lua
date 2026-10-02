@@ -125,38 +125,67 @@ function ZTAC:GetPendingRank(spells)
 	return tonumber((Call(api.GetPendingRankByEntryID, id))) or 0
 end
 
+-- Unspent talent points as the talent window shows them (unsaved choices already taken off): ae
+-- for the class tree, te for the spec tree. nil when the client doesn't report them.
+function ZTAC:GetPointBudget()
+	local api = CA()
+	if not api then return nil end
+	local ae = tonumber((Call(api.GetPendingRemainingAE)))
+	local te = tonumber((Call(api.GetPendingRemainingTE)))
+	if not ae or not te then return nil end
+	return { ae = ae, te = te }
+end
+
+-- The point pool a pick spends from and its cost; nil for talents that cost nothing.
+local function Cost(pick)
+	if pick.ae then return "ae", pick.ae end
+	if pick.te then return "te", pick.te end
+end
+
 -- Status of every pick in one tree of the build:
 --   done     learned (at least the rank this pick asks for)
 --   pending  chosen in the talent window, not applied yet
---   auto     granted automatically at its level (rl)
---   next     one of the first picks still to take at the current level
---   open     can be taken at the current level
---   locked   needs a higher level
-function ZTAC:EvaluatePath(path, level)
+--   auto     granted automatically (row.unlock: its unlock level, while above the character's)
+--   next     one of the first picks still to take that the unspent points cover
+--   open     also covered by the unspent points
+--   locked   not yet: row.reason "points" (the unspent points run out before it, following the
+--            build's order) or "level" (a talent that costs nothing and unlocks at a higher level,
+--            row.unlock)
+-- Ascension Sidekick's per-pick levels are not learning requirements for talents that cost points
+-- (Time's spec root Ripple is marked 48 but is its first pick), so only the points limit those.
+-- budget (GetPointBudget) is spent as picks are covered; without one nothing is locked by points.
+function ZTAC:EvaluatePath(path, level, budget)
 	local rows, nextLeft = {}, NEXT_COUNT
 	local done, total = 0, 0
 	for _, pick in ipairs(path or {}) do
 		local need = pick.rank or 1
 		local known = self:GetKnownRank(pick.spells)
-		local status
+		local pool, cost = Cost(pick)
+		local status, reason, unlock
 		if known >= need then
 			status = "done"
 		elseif self:GetPendingRank(pick.spells) >= need then
 			status = "pending"
 		elseif pick.auto then
 			status = "auto"
-		elseif (pick.lvl or pick.rl or 1) > level then
-			status = "locked"
-		elseif nextLeft > 0 then
-			status = "next"; nextLeft = nextLeft - 1
+			if (pick.rl or 1) > level then unlock = pick.rl end
+		elseif not pool and (pick.lvl or 1) > level then
+			status, reason, unlock = "locked", "level", pick.lvl
+		elseif pool and budget and (budget[pool] or 0) < cost then
+			status, reason = "locked", "points"
 		else
-			status = "open"
+			if pool and budget then budget[pool] = budget[pool] - cost end
+			if nextLeft > 0 then
+				status = "next"; nextLeft = nextLeft - 1
+			else
+				status = "open"
+			end
 		end
 		if not pick.auto then
 			total = total + 1
 			if status == "done" then done = done + 1 end
 		end
-		rows[#rows + 1] = { pick = pick, status = status }
+		rows[#rows + 1] = { pick = pick, status = status, reason = reason, unlock = unlock }
 	end
 	return rows, done, total
 end
@@ -168,8 +197,9 @@ function ZTAC:Evaluate()
 	local build = cls and spec and cls.specs[spec]
 	if not build then return nil end
 	local level = UnitLevel("player") or 1
-	local classRows, classDone, classTotal = self:EvaluatePath(build.classPath, level)
-	local specRows, specDone, specTotal = self:EvaluatePath(build.specPath, level)
+	local budget = self:GetPointBudget() -- shared: class picks spend ae, spec picks te
+	local classRows, classDone, classTotal = self:EvaluatePath(build.classPath, level, budget)
+	local specRows, specDone, specTotal = self:EvaluatePath(build.specPath, level, budget)
 	return {
 		className = cls.name, spec = spec, autoSpec = auto, detectedSpec = self:DetectSpec(),
 		role = build.role, keystone = build.keystone, level = level,

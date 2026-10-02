@@ -69,6 +69,7 @@ local function Load(classToken, opts)
 	dofile(dir .. "Overlay.lua")
 	dofile(dir .. "Preview.lua")
 	dofile(dir .. "Load.lua")
+	dofile(dir .. "Options.lua")
 	return _G.ZygorTalentAdvisorCOA, _G.ZygorTalentAdvisorCOA_Data
 end
 
@@ -114,7 +115,10 @@ local function same(a, b) return a.node == b.node and (a.rank or 1) == (b.rank o
 for _, row in ipairs(state.spec_.rows) do
 	counts[row.status] = (counts[row.status] or 0) + 1
 	if same(row.pick, firstOpen) then assert(row.status == "done", "learned pick should be done"); sawLearned = true end
-	if row.status == "locked" then assert((row.pick.lvl or row.pick.rl) > 30, "locked only above the level") end
+	-- no point counts from this stand-in client: only free talents above the level are locked
+	if row.status == "locked" then
+		assert(row.reason == "level" and not (row.pick.ae or row.pick.te) and row.unlock > 30, "locked only for free talents above the level")
+	end
 	if row.pick.auto then assert(row.status == "auto" or row.status == "done", "auto picks") end
 end
 assert(sawLearned, "the learned pick was not found in the evaluated rows")
@@ -584,6 +588,121 @@ do
 	f.loadButton.scripts.OnClick(f.loadButton)
 	assert(_G.lastPopup, "panel button asks to confirm")
 	_G.print = function() end
+end
+
+-- 12. Statuses follow the unspent talent points, not Ascension Sidekick's levels.
+do
+	local SPECS = { { ID = 103, Spec = "Displacement", Name = "Time" } }
+	local function Run(opts)
+		local api = {
+			GetPendingRemainingAE = function() return opts.ae end,
+			GetPendingRemainingTE = function() return opts.te end,
+		}
+		local Z = Load("CHRONOMANCER", { level = opts.level, specs = SPECS, specID = 103, api = api,
+			known = opts.known, pending = opts.pending })
+		return Z, Z:Evaluate()
+	end
+	local function Statuses(rows)
+		local list = {}
+		for _, row in ipairs(rows) do if not row.pick.auto then list[#list + 1] = row end end
+		return list
+	end
+
+	-- Level 20, 3 class and 2 spec points: the first picks in the build's order are covered -
+	-- including Ripple, which Sidekick marks level 48 - and the rest wait for points.
+	local Z, state = Run({ level = 20, ae = 3, te = 2 })
+	local class, spec = Statuses(state.class.rows), Statuses(state.spec_.rows)
+	for i, row in ipairs(class) do
+		local want = i <= 3 and "next" or "locked"
+		assert(row.status == want, ("class pick %d (%s): %s, expected %s"):format(i, row.pick.n, row.status, want))
+		if want == "locked" then assert(row.reason == "points", "locked for points") end
+	end
+	assert(spec[1].pick.n == "Ripple" and spec[1].status == "next", "Ripple (Sidekick 'level 48') is a next pick at 20")
+	assert(spec[2].status == "next" and spec[3].status == "locked" and spec[3].reason == "points", "spec points run out after two")
+	assert(Z:StatusTag(spec[3]) == "needs more talent points", "locked tag")
+
+	-- Plenty of points: nothing locked by points; three next per tree, the rest open.
+	Z, state = Run({ level = 20, ae = 99, te = 99 })
+	for _, rows in ipairs({ state.class.rows, state.spec_.rows }) do
+		local nexts = 0
+		for _, row in ipairs(rows) do
+			assert(row.reason ~= "points", "nothing locked by points")
+			if row.status == "next" then nexts = nexts + 1 end
+		end
+		assert(nexts == 3, "three next picks per tree")
+	end
+
+	-- Learned and unsaved picks don't use the unspent points again.
+	local TIME = state.spec_.rows[1] and Z:GetClassData().specs.Time
+	local first, second = TIME.classPath[1], TIME.classPath[2]
+	Z, state = Run({ level = 20, ae = 1, te = 0, known = { [first.spells[1]] = true }, pending = { [second.spells[1]] = 1 } })
+	class = Statuses(state.class.rows)
+	assert(class[1].status == "done" and class[2].status == "pending", "learned and unsaved picks")
+	assert(class[3].status == "next" and class[4].status == "locked", "the one unspent point covers the next pick only")
+
+	-- Automatic talents: unlock level shown while above the character's.
+	local unlocks = {}
+	for _, row in ipairs(state.spec_.rows) do if row.pick.auto then unlocks[row.pick.n] = row.unlock or false end end
+	assert(unlocks["Aeon of Protection"] == false and unlocks["Aeon of Renewal"] == 30, "Protection (15) unlocked at 20, Renewal at 30")
+	for _, row in ipairs(state.spec_.rows) do
+		if row.pick.n == "Aeon of Renewal" then assert(Z:StatusTag(row) == "unlocks at level 30", "auto tag") end
+	end
+
+	-- Row tags: no Sidekick level on talents that cost points; unlock levels on the others.
+	assert(Z:GateText(TIME.specPath[2]) == nil, "Ripple shows no level")
+	for _, pick in ipairs(TIME.specPath) do
+		if pick.n == "Aeon of Renewal" then assert(Z:GateText(pick) == "auto Lv30", "auto talent shows its unlock level") end
+	end
+
+	-- Without point counts from the client nothing is locked by points.
+	Z, state = Run({ level = 20 })
+	for _, row in ipairs(state.class.rows) do assert(row.reason ~= "points", "no budget, no point locks") end
+end
+
+-- 13. The "CoA Talent Advisor" tab in Zygor's options: background opacity, opening with the
+--     talent window, tree numbers, spec preview.
+do
+	local talent = Widget(); talent.TreeView = { ClassTree = Widget(), SpecTree = Widget() }
+	for _, t in pairs(talent.TreeView) do t.EnumerateNodes = function() return function() return nil end end end
+	local Z = Load("CHRONOMANCER", { level = 30, talentFrame = talent })
+	local opts = Z:GetOptionsTable()
+	assert(Z.OPTIONS_APP == "ZygorGuidesViewer-TalentAdvisorCOA" and opts.type == "group" and opts.name == "CoA Talent Advisor", "options group")
+	local a = opts.args
+	assert(a.opacity.type == "range" and a.opacity.isPercent and a.opacity.min == 0 and a.opacity.max == 1, "opacity is a percentage slider")
+	assert(a.autoShow.type == "toggle" and a.preview.type == "toggle" and a.numbers.type == "select", "the other three settings")
+
+	-- Opacity: defaults to today's look (0), applies to the panel's background layer at once.
+	local f = Z:GetPopout()
+	local alpha
+	f.fill.SetAlpha = function(_, v) alpha = v end
+	assert(a.opacity.get() == 0, "default opacity is the standard background")
+	a.opacity.set(nil, 0.6)
+	assert(Z:GetSettings().opacity == 0.6 and alpha == 0.6, "slider sets the background layer's alpha")
+	a.opacity.set(nil, 5)
+	assert(a.opacity.get() == 1, "clamped to 100%")
+
+	-- Open with the talent window.
+	assert(a.autoShow.get() == true, "opens with the talent window by default")
+	a.autoShow.set(nil, false)
+	assert(Z:GetSettings().autoShow == false and a.autoShow.get() == false, "turned off")
+	f:Hide()
+	Z:HookTalentFrame()
+	talent:Show()
+	assert(not f:IsShown(), "panel stays closed when the talent window opens")
+
+	-- Tree numbers: the same setting as the panel's button and /ztacoa points|order|numbers.
+	assert(a.numbers.get() == "points", "points by default")
+	a.numbers.set(nil, "order")
+	assert(Z:GetOverlayMode() == "order" and a.numbers.get() == "order", "order")
+	a.numbers.set(nil, "off")
+	assert(not Z:IsOverlayEnabled() and a.numbers.get() == "off", "off")
+	a.numbers.set(nil, "points")
+	assert(Z:IsOverlayEnabled() and Z:GetOverlayMode() == "points", "back on, points")
+
+	-- Spec preview.
+	assert(a.preview.get() == true, "preview on by default")
+	a.preview.set(nil, false)
+	assert(not Z:IsPreviewEnabled() and a.preview.get() == false, "preview off")
 end
 
 realPrint("ZygorTalentAdvisorCOA regression passed")

@@ -11,9 +11,24 @@ local STATUS_STYLE = {
 	pending = { color = "|cffffd100", tag = "chosen, not applied" },
 	next    = { color = "|cffffffff", tag = "next" },
 	open    = { color = "|cffc8c8c8", tag = "available" },
-	locked  = { color = "|cff808080", tag = "needs a higher level" },
+	locked  = { color = "|cff808080", tag = "needs more talent points" },
 	auto    = { color = "|cff7f9fbf", tag = "granted automatically" },
 }
+
+-- What a row's status means, for its tooltip: talents that unlock at a level say which.
+function ZTAC:StatusTag(data)
+	if data.unlock then return "unlocks at level " .. data.unlock end
+	local style = STATUS_STYLE[data.status]
+	return style and style.tag or tostring(data.status)
+end
+
+-- The level shown after a pick's name: only for talents whose level is a real unlock (those the
+-- game grants automatically, and ones that cost no points). Ascension Sidekick's levels for the
+-- others aren't requirements, so they aren't shown.
+function ZTAC:GateText(pick)
+	if pick.auto then return pick.rl and ("auto Lv" .. pick.rl) or "auto" end
+	if not (pick.ae or pick.te) and pick.lvl then return "Lv" .. pick.lvl end
+end
 
 local function SpellIcon(spells)
 	local id = spells and spells[1]
@@ -44,6 +59,13 @@ local function CreatePopout()
 		tile = true, tileSize = 32, edgeSize = 24,
 		insets = { left = 6, right = 6, top = 6, bottom = 6 },
 	})
+	-- Solid layer over the dialog background, inside the border; its alpha is the "Panel background
+	-- opacity" option (Options.lua), 0 keeping the standard see-through background.
+	local fill = f:CreateTexture(nil, "BACKGROUND")
+	fill:SetTexture(0, 0, 0, 1)
+	fill:SetPoint("TOPLEFT", 10, -10)
+	fill:SetPoint("BOTTOMRIGHT", -10, 10)
+	f.fill = fill
 	f:Hide()
 	tinsert(UISpecialFrames, f:GetName()) -- Escape closes it
 
@@ -159,9 +181,8 @@ local function CreatePopout()
 			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
 			local spell = pick.spells and pick.spells[pick.rank or 1] or (pick.spells and pick.spells[1])
 			if spell then GameTooltip:SetHyperlink("spell:" .. spell) else GameTooltip:AddLine(pick.n, 1, 1, 1) end
-			local style = STATUS_STYLE[data.status]
 			GameTooltip:AddLine(" ")
-			GameTooltip:AddLine("Build: " .. (style and style.tag or data.status), 0.5, 0.75, 1)
+			GameTooltip:AddLine("Build: " .. ZTAC:StatusTag(data), 0.5, 0.75, 1)
 			if pick.why and pick.why ~= "" then GameTooltip:AddLine(pick.why, 1, 0.82, 0, true) end
 			GameTooltip:Show()
 		end)
@@ -217,7 +238,8 @@ local function CreatePopout()
 				row.icon:SetTexture(SpellIcon(pick.spells) or "Interface\\Icons\\INV_Misc_QuestionMark")
 				row.icon:SetDesaturated(data.status == "locked" or data.status == "done")
 				local rank = (pick.rank and pick.rank > 1) and (" " .. pick.rank) or ""
-				local gate = pick.lvl and (" |cff808080Lv" .. pick.lvl .. "|r") or (pick.rl and (" |cff808080auto " .. pick.rl .. "|r") or "")
+				local gate = ZTAC:GateText(pick)
+				gate = gate and (" |cff808080" .. gate .. "|r") or ""
 				local marker = data.status == "next" and "|cffffd100> |r" or (data.status == "done" and "|cff5fb85f+ |r" or "  ")
 				row.text:SetText(marker .. style.color .. pick.n .. rank .. "|r |cff7f9fbf[" .. (pick.kind or "T") .. "]|r" .. gate)
 				row:SetPoint("TOPLEFT", 0, -y)
@@ -243,8 +265,16 @@ local function CreatePopout()
 end
 
 function ZTAC:GetPopout()
-	if not self.Popout then self.Popout = CreatePopout() end
+	if not self.Popout then
+		self.Popout = CreatePopout()
+		self:ApplyPanelOpacity()
+	end
 	return self.Popout
+end
+
+function ZTAC:ApplyPanelOpacity()
+	local f = self.Popout
+	if f and f.fill then f.fill:SetAlpha(self.GetPanelOpacity and self:GetPanelOpacity() or 0) end
 end
 
 function ZTAC:PlacePopout()

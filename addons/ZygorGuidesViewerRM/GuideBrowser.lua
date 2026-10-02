@@ -1081,10 +1081,15 @@ local GUIDE_MANAGER_OPTIONS_ICONS = {
 	["ZygorGuidesViewer-ItemScore"] = "Interface\\Icons\\INV_Misc_Gear_01",
 }
 
+-- CoA Talent Advisor tab (ZygorTalentAdvisorCOA\Options.lua): listed after Stat Weights when
+-- Options.lua registered it, i.e. on Conquest of Azeroth characters only.
+local GUIDE_MANAGER_OPTIONS_ZTACOA = { id = "ztacoa", label = "CoA Talent Advisor", app = "ZygorGuidesViewer-TalentAdvisorCOA", desc = "Talent panel background, talent tree numbers, and previewing other specs for Conquest of Azeroth classes." }
+
 local function BuildGuideManagerOptionsApps(self)
 	local apps = {}
 	for _,opt in ipairs(GUIDE_MANAGER_OPTIONS_APPS) do
 		tinsert(apps, opt)
+		if opt.id == "itemscore" and self and self.optionsztacoa then tinsert(apps, GUIDE_MANAGER_OPTIONS_ZTACOA) end
 	end
 	if self and self.db and self.db.profile and self.db.profile.debug then
 		tinsert(apps, { id = "debug", label = LT("gb_opt_advanced"), app = "ZygorGuidesViewer-Debug", desc = LT("gb_opt_desc_advanced") })
@@ -1096,6 +1101,7 @@ local function GetOptionsAppMeta(appName)
 	for _,opt in ipairs(GUIDE_MANAGER_OPTIONS_APPS) do
 		if opt.app == appName then return opt end
 	end
+	if appName == GUIDE_MANAGER_OPTIONS_ZTACOA.app then return GUIDE_MANAGER_OPTIONS_ZTACOA end
 	if appName == "ZygorGuidesViewer-Debug" then
 		return { label = LT("gb_opt_advanced"), desc = LT("gb_opt_desc_advanced") }
 	end
@@ -1138,6 +1144,7 @@ local function GetOptionsAppSearchHay(self, appName)
 	elseif appName=="ZygorGuidesViewer-Profile" then src=self.optionsprofile
 	elseif appName=="ZygorGuidesViewer-About" then src=self.optionsabout
 	elseif appName=="ZygorGuidesViewer-Debug" then src=self.optionsdebug
+	elseif appName==GUIDE_MANAGER_OPTIONS_ZTACOA.app then src=self.optionsztacoa
 	end
 
 	local chunks = {}
@@ -1192,6 +1199,7 @@ local GUIDE_MANAGER_OPTIONS_ICON_COORDS = {
 	automation = {2,16},
 	actionbuttons = {2,17},
 	maps = {2,18},
+	zta = {2,15}, -- talent advisor (Skins.lua OptionsIcons.zta)
 }
 
 local function GetOptionsIconTexCoord(iconId)
@@ -1224,6 +1232,7 @@ local GUIDE_MANAGER_OPTIONS_APP_ICON = {
 	["ZygorGuidesViewer-Debug"] = "about",
 	["ZygorGuidesViewer-Gear"] = "gear",
 	["ZygorGuidesViewer-ItemScore"] = "itemscore",
+	["ZygorGuidesViewer-TalentAdvisorCOA"] = "zta",
 }
 
 local function StripColorCodes(text)
