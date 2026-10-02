@@ -6,4 +6,5 @@
 	<Script file="Popout.lua"/>
 	<Script file="Overlay.lua"/>
 	<Script file="Preview.lua"/>
+	<Script file="Load.lua"/>
 </Ui>

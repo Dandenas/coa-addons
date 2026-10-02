@@ -82,7 +82,7 @@ local function CreatePopout()
 
 	local scroll = CreateFrame("ScrollFrame", "ZygorTalentAdvisorCOAPopoutScroll", f, "UIPanelScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 14, -104)
-	scroll:SetPoint("BOTTOMRIGHT", -34, 34)
+	scroll:SetPoint("BOTTOMRIGHT", -34, 48)
 	local child = CreateFrame("Frame", nil, scroll)
 	child:SetSize(WIDTH - 50, 10)
 	scroll:SetScrollChild(child)
@@ -90,8 +90,24 @@ local function CreatePopout()
 	f.rows = {}
 
 	local credit = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	credit:SetPoint("BOTTOMRIGHT", -16, 12)
+	credit:SetPoint("BOTTOMRIGHT", -16, 32)
 	credit:SetText("Builds: Ascension Sidekick")
+
+	-- Puts the build into the talent window as unsaved changes (Load.lua); asks first.
+	local load = CreateFrame("Button", "ZygorTalentAdvisorCOAPopoutLoad", f, "UIPanelButtonTemplate")
+	load:SetSize(110, 20)
+	load:SetPoint("BOTTOMRIGHT", -14, 8)
+	load:SetText("Load build")
+	load:SetScript("OnClick", function() ZTAC:ConfirmLoadBuild() end)
+	load:SetScript("OnEnter", function(btn)
+		GameTooltip:SetOwner(btn, "ANCHOR_TOP")
+		GameTooltip:AddLine("Load build into the talent window", 1, 1, 1)
+		GameTooltip:AddLine("Fills in this build, as far as your level allows, as unsaved changes. Review them, then press Save Changes or Undo in the talent window.", nil, nil, nil, true)
+		GameTooltip:AddLine("A build for another spec switches the window to that spec first (also unsaved).", 0.5, 0.75, 1, true)
+		GameTooltip:Show()
+	end)
+	load:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	f.loadButton = load
 
 	-- Cycles the talent-tree numbers: points -> order -> off.
 	local mode = CreateFrame("Button", "ZygorTalentAdvisorCOAPopoutMode", f, "UIPanelButtonTemplate")

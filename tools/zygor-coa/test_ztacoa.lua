@@ -47,7 +47,10 @@ local function Load(classToken, opts)
 		GetPendingRankByEntryID = function(id) return (opts.pending or {})[id - 1000000] or 0 end,
 		GetActiveChrSpec = function() return opts.specID end,
 	}
+	for name, fn in pairs(opts.api or {}) do _G.C_CharacterAdvancement[name] = fn end
 	if opts.noCA then _G.C_CharacterAdvancement = nil end
+	_G.StaticPopupDialogs, _G.CANCEL = {}, "Cancel"
+	_G.StaticPopup_Show = function(name, text) _G.lastPopup = { name = name, text = text } end
 	-- opts.specs: the class's client specs, { { ID, Spec (file name), Name }, ... }
 	local specs = opts.specs or {}
 	_G.C_ClassInfo = {
@@ -65,6 +68,7 @@ local function Load(classToken, opts)
 	dofile(dir .. "Popout.lua")
 	dofile(dir .. "Overlay.lua")
 	dofile(dir .. "Preview.lua")
+	dofile(dir .. "Load.lua")
 	return _G.ZygorTalentAdvisorCOA, _G.ZygorTalentAdvisorCOA_Data
 end
 
@@ -384,6 +388,202 @@ do
 	Z, talent, view = Setup({})
 	Z:SetSelectedSpec("Time")
 	assert(view.specID == nil and not Z.previewSpecID, "no preview without an active spec")
+end
+
+-- 11. Load build: a CoA build link into the talent window as unsaved changes, trimmed to what
+--     the character can take, switching spec first when needed. Never saves.
+do
+	local SPECS = {
+		{ ID = 101, Spec = "Time", Name = "Artificer" },
+		{ ID = 102, Spec = "Duality", Name = "Infinite" },
+		{ ID = 103, Spec = "Displacement", Name = "Time" },
+	}
+	-- Chronomancer Time as Ascension Sidekick's site gives it (confirmed to import in game).
+	local WEBSITE = ":6162t2:6183t2:6187t2:6190t1:6192t1:6196t1:6213t1:6214t1:6215t1:6226t1:6228t1:6652t1:6696t1:6697t1:6698t1:6699t1:6700t1:6702t1:7198t1:7226t1:7911t2:7912t1:7915t1:7916t1:7917t1:9198t1:11122t1:19978t1:19979t2:19980t1:29670t1:29681t1:30249t1:30260t1:30261t1:30267t1:30269t1:30276t1:30277t1:30280t1:30780t1:30901t1:30902t1:30903t1:30922t1:31182t1:"
+	local _, DATA = Load("CHRONOMANCER")
+	local TIME = DATA.classes.CHRONOMANCER.specs.Time
+	local classNode, autoNode = {}, {}
+	for _, p in ipairs(TIME.classPath) do classNode[p.node] = true end
+	for _, path in ipairs({ TIME.classPath, TIME.specPath }) do
+		for _, p in ipairs(path) do if p.auto then autoNode[p.node] = true end end
+	end
+	local function Tokens(link)
+		local t = {}
+		for node, rank in link:gmatch("(%d+)t(%d+)") do t[tonumber(node)] = tonumber(rank) end
+		return t
+	end
+	-- What each Time build talent hangs from (ConnectedNodes in the client's CoA tree data); the
+	-- roots - Accelerated Recovery, Clasp of Infinity, Ripple - hang from nothing.
+	local CONNECTED = {
+		[30277] = {}, [6697] = { 30277 }, [7911] = { 30249, 30277 }, [6228] = { 6697, 7911 },
+		[7917] = { 6226, 7911, 30280 }, [6162] = { 6228, 7917, 30269 }, [30249] = {}, [30280] = { 30249 },
+		[6226] = { 30249, 30855 }, [30269] = { 6226, 30251 }, [30260] = { 6228 }, [7198] = { 6162 },
+		[9198] = { 30260 }, [30276] = { 30260 }, [6698] = { 7198, 32547 }, [11122] = { 9198, 30276 },
+		[6214] = { 6698, 7226, 9198 }, [30267] = { 6214 }, [6696] = { 30269 }, [7226] = { 6696 },
+		[6213] = { 6696 }, [6215] = { 6213, 7226 }, [7915] = { 6199, 9547, 30267 }, [7916] = { 7915 },
+		[31182] = {}, [19979] = { 31182 }, [6700] = { 31182 }, [19980] = { 6700, 19979 }, [6183] = { 19980 },
+		[6190] = { 19980 }, [6187] = { 19980 }, [29681] = { 6183 }, [6699] = { 6190 }, [6196] = { 6190 },
+		[19978] = { 6187 }, [30901] = { 29681 }, [30903] = { 6699, 29681 }, [7912] = { 6196, 6699 },
+		[30902] = { 30901, 30903 }, [30922] = { 30903 }, [30780] = { 7912, 30903 }, [6702] = { 7912, 29571 },
+		[29670] = { 30780 }, [6652] = { 6702 }, [6192] = { 6184, 6652, 30905 }, [30261] = { 6192, 7826 },
+	}
+
+	-- opts: active (spec ID), level, classBudget/specBudget (points per tree), needAuto (after a
+	-- switch the automatic talents must be in the link), refuse (refuse everything), pending, shown
+	local function Setup(opts)
+		local game = { active = opts.active, imports = {}, accepted = nil, applied = false, cancelled = false, switches = {} }
+		local api = {
+			GetActiveChrSpec = function() return game.active end,
+			SwitchActiveChrSpec = function(id) game.active = id; game.switched = true end,
+			IsPending = function() return opts.pending == true end,
+			ApplyPendingBuild = function() game.applied = true end,
+			CancelPendingBuild = function() game.cancelled = true end,
+			GetEntryByInternalID = function(id) return { Name = "Node" .. id } end,
+			ImportPendingBuild = function(link)
+				game.imports[#game.imports + 1] = link
+				if opts.refuse then return false, "CA_LEARN_NOT_IN_COMBAT", 6162, 1 end
+				local class, spec, hasAuto = 0, 0, false
+				for node, rank in pairs(Tokens(link)) do
+					if autoNode[node] then hasAuto = true
+					elseif classNode[node] then class = class + rank
+					else spec = spec + rank end
+				end
+				if class > (opts.classBudget or 999) or spec > (opts.specBudget or 999) then
+					return false, "CA_LEARN_MISSING_CONNECTED_ENTRIES", 6162, 2
+				end
+				if opts.needAuto and game.switched and not hasAuto then
+					return false, "CA_LEARN_MISSING_CONNECTED_ENTRIES", 6162, 2
+				end
+				-- level 45 in game: Time's Aeon of Resilience (kept by the game) needs the class talent
+				-- Accelerated Recovery, and builds without spec picks were refused as well
+				if opts.needBoth and (spec == 0 or not Tokens(link)[30277]) then
+					return false, "CA_LEARN_MISSING_REQUIRED_ID", 4032, 1
+				end
+				-- the trees' connections: every talent needs a talent it hangs from
+				if opts.connected then
+					local t = Tokens(link)
+					for node in pairs(t) do
+						local from = CONNECTED[node]
+						if from and #from > 0 then
+							local linked = false
+							for _, parent in ipairs(from) do linked = linked or t[parent] ~= nil end
+							if not linked then return false, "CA_LEARN_MISSING_CONNECTED_ENTRIES", node, t[node] end
+						end
+					end
+				end
+				game.accepted = link
+				return true
+			end,
+		}
+		local talent = Widget()
+		talent.shown = opts.shown ~= false
+		talent.TreeView = { ClassTree = Widget(), SpecTree = Widget(), SetSpecID = function(self, id) self.specID = id end }
+		for _, t in pairs({ talent.TreeView.ClassTree, talent.TreeView.SpecTree }) do
+			t.EnumerateNodes = function() return function() return nil end end
+			t.GetFrameLevel = function() return 5 end
+		end
+		function talent:ChangeSpecID(id) game.switches[#game.switches + 1] = id; api.SwitchActiveChrSpec(id) end
+		local Z = Load("CHRONOMANCER", { level = opts.level or 60, specs = SPECS, api = api, talentFrame = talent })
+		game.messages = {}
+		_G.print = function(m) game.messages[#game.messages + 1] = m end
+		Z:SetSelectedSpec(opts.spec or "Time")
+		return Z, game
+	end
+	-- Level 60, already Time: exactly the site's link, one import, nothing saved.
+	local Z, game = Setup({ active = 103 })
+	assert(Z:LoadBuild(), "loads at level 60")
+	assert(#game.imports == 1 and game.imports[1] == WEBSITE, "link must match the site's build code, got " .. tostring(game.imports[1]))
+	assert(#game.switches == 0, "no spec switch when the build is for the active spec")
+	assert(not game.applied, "never saves")
+	assert(game.messages[#game.messages]:find("Save Changes"), "tells the user to review and save")
+	assert(not Z.loading, "loading flag cleared")
+
+	-- Not enough points: each tree trimmed from its end to its own budget.
+	Z, game = Setup({ active = 103, classBudget = 10, specBudget = 7 })
+	local ok, count = Z:LoadBuild()
+	assert(ok and count == 17, "trimmed to 10 class + 7 spec picks, got " .. tostring(count))
+	local class, spec = 0, 0
+	for node, rank in pairs(Tokens(game.accepted)) do
+		if classNode[node] then class = class + rank else spec = spec + rank end
+	end
+	assert(class == 10 and spec == 7, ("final link uses the whole budget (%d/%d)"):format(class, spec))
+	assert(game.messages[#game.messages]:find("need more talent points"), "says the rest needs more points")
+	assert(not game.applied, "never saves")
+
+	-- Level 45 as seen in game: too few points for every pick at the level, class-only builds
+	-- refused. Trimming follows the leveling order of both trees, so it still loads.
+	Z, game = Setup({ active = 103, level = 45, classBudget = 12, specBudget = 9, needBoth = true })
+	ok, count = Z:LoadBuild()
+	assert(ok and count == 21, "level 45 loads 12 class + 9 spec picks, got " .. tostring(count))
+	local t = Tokens(game.accepted)
+	assert(t[30277], "Accelerated Recovery is in the loaded build")
+	assert(not game.applied, "never saves")
+	local lines = Z:DescribeLastLoad()
+	assert(lines[1]:find("Time at level 45") and lines[1]:find("12 class %+ 9 spec"), "debug summary: " .. lines[1])
+	assert(lines[2] and lines[2]:find("first refused"), "debug shows the first refusal")
+
+	-- Fresh level-20 character as in game: Ascension Sidekick marks the spec root Ripple "level 48"
+	-- although it's the first spec pick. Its levels aren't requirements, so Ripple must be loaded
+	-- with the talents that hang from it; only the points limit the build.
+	Z, game = Setup({ active = 103, level = 20, classBudget = 8, specBudget = 6, connected = true })
+	ok, count = Z:LoadBuild()
+	assert(ok and count == 14, "level 20 loads 8 class + 6 spec picks, got " .. tostring(count))
+	t = Tokens(game.accepted)
+	assert(t[31182] and t[30277], "the tree roots Ripple and Accelerated Recovery are loaded")
+	assert(not game.applied, "never saves")
+
+	-- Automatic talents only up to their grant level: at 20, Aeon of Resilience (1) and Protection
+	-- (15), not Renewal (30).
+	Z, game = Setup({ active = 102, level = 20, needAuto = true })
+	assert(Z:LoadBuild(), "loads after switching spec at level 20")
+	t = Tokens(game.accepted)
+	assert(t[4032] and t[9177] and not t[9181], "automatic talents limited to their grant level")
+
+	-- Another spec active: the window switches to Time first; its automatic talents are added when
+	-- the plain link is refused after the switch.
+	Z, game = Setup({ active = 102, needAuto = true })
+	assert(Z:LoadBuild(), "loads after switching spec")
+	assert(game.switches[1] == 103 and game.active == 103, "switched the window to Time through its own ChangeSpecID")
+	local withAuto = false
+	for node in pairs(Tokens(game.accepted)) do if autoNode[node] then withAuto = true end end
+	assert(withAuto, "automatic talents included after the switch")
+	assert(not game.cancelled and not game.applied, "kept as unsaved changes")
+
+	-- Nothing fits after a switch: the switch is undone and the game's reason shown.
+	Z, game = Setup({ active = 102, refuse = true })
+	assert(not Z:LoadBuild(), "refused build reports failure")
+	assert(game.cancelled, "spec switch undone")
+	assert(game.messages[#game.messages]:find("couldn't load") and game.messages[#game.messages]:find("Node6162"), "shows the reason with the talent's name")
+	assert(not game.applied, "never saves")
+	-- ...and without a switch nothing is undone (a refused import changes nothing).
+	Z, game = Setup({ active = 103, refuse = true })
+	assert(not Z:LoadBuild() and not game.cancelled, "no cancel without a switch")
+
+	-- No points at all (level 1): every attempt refused, nothing changes, the reason is shown.
+	Z, game = Setup({ active = 103, level = 1, classBudget = 0, specBudget = 0 })
+	assert(not Z:LoadBuild() and not game.accepted and not game.cancelled, "nothing loaded, nothing to undo")
+	assert(game.messages[#game.messages]:find("couldn't load"), "reports the failure")
+
+	-- Confirmation: needs the talent window open, warns about replacing unsaved changes.
+	Z, game = Setup({ active = 103, shown = false })
+	_G.lastPopup = nil
+	Z:ConfirmLoadBuild()
+	assert(not _G.lastPopup and game.messages[#game.messages]:find("open the talent window"), "asks to open the talent window")
+	Z, game = Setup({ active = 103, pending = true })
+	Z:ConfirmLoadBuild()
+	assert(_G.lastPopup and _G.lastPopup.text:find("Time") and _G.lastPopup.text:find("replaced"), "popup names the build and warns")
+	assert(#game.imports == 0, "nothing loaded before confirming")
+	_G.StaticPopupDialogs[_G.lastPopup.name].OnAccept()
+	assert(#game.imports > 0 and not game.applied, "Load button in the popup loads, still unsaved")
+	Z, game = Setup({ active = 103 })
+	Z:ConfirmLoadBuild()
+	assert(not _G.lastPopup.text:find("replaced"), "no warning without unsaved changes")
+	-- the panel's button opens the same confirmation
+	_G.lastPopup = nil
+	local f = Z:GetPopout()
+	f.loadButton.scripts.OnClick(f.loadButton)
+	assert(_G.lastPopup, "panel button asks to confirm")
+	_G.print = function() end
 end
 
 realPrint("ZygorTalentAdvisorCOA regression passed")

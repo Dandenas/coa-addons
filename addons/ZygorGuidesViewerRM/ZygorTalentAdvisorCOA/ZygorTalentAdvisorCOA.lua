@@ -179,6 +179,7 @@ function ZTAC:Evaluate()
 end
 
 function ZTAC:Refresh()
+	if self.loading then return end -- Load.lua refreshes once when it's done
 	if self.UpdatePreview then self:UpdatePreview() end -- first, so the panel and numbers follow it
 	if self.Popout and self.Popout:IsShown() then self.Popout:Update() end
 	if self.UpdateOverlay then self:UpdateOverlay() end
@@ -223,6 +224,13 @@ SlashCmdList.ZYGORTALENTADVISORCOA = function(msg)
 	end
 	if msg == "debug" then
 		print("|cffffbb00Zygor CoA Talent Advisor:|r " .. ZTAC:DescribeOverlay())
+		if ZTAC.DescribeLastLoad then
+			for _, line in ipairs(ZTAC:DescribeLastLoad()) do print("|cffffbb00Zygor CoA Talent Advisor:|r " .. line) end
+		end
+		return
+	end
+	if msg == "load" then
+		ZTAC:ConfirmLoadBuild()
 		return
 	end
 	if msg == "preview" then

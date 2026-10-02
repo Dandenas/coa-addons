@@ -8,7 +8,8 @@ local ZTAC = ZygorTalentAdvisorCOA
 if not ZTAC then return end
 
 local BANNER_TEXT = "PREVIEW - not your active spec"
-local BLOCKED_TEXT = "Zygor Talent Advisor: this tree is a preview. Choose Auto in the advisor to edit your talents."
+local BLOCKED_TEXT = "Preview only - choose Auto in the Zygor advisor to edit your talents."
+local BLOCKED_COLOR = { 1, 1, 0.55 } -- pale yellow: readable over the bright tree art
 
 function ZTAC:IsPreviewEnabled()
 	return self:GetSettings().preview ~= false
@@ -98,7 +99,7 @@ function ZTAC:GuardPreviewClicks()
 				button.ZTACGuarded = true
 				button:SetScript("OnClick", function(btn, ...)
 					if ZTAC.previewSpecID and not IsModifiedClick("CHATLINK") then
-						UIErrorsFrame:AddMessage(BLOCKED_TEXT, 1, 0.82, 0)
+						UIErrorsFrame:AddMessage(BLOCKED_TEXT, BLOCKED_COLOR[1], BLOCKED_COLOR[2], BLOCKED_COLOR[3])
 						return
 					end
 					return original(btn, ...)
