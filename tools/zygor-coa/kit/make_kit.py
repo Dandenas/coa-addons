@@ -36,6 +36,15 @@ TARGETS = {
         'edit': ['TomTom.lua', 'TomTom_Corpse.lua', 'TomTom_POIIntegration.lua'],
         'copy': [],
     },
+    'healbot': {
+        'patched': os.path.join(ADDONS, 'HealBot'),
+        # HealBot 3.3.5.4 keys its class tables by the first four letters of the class; CoA
+        # classes ("CHRO", ...) are in none of them. Originals were backed up before patching.
+        'pristine': {rel: os.path.join(ADDONS, 'HealBot', '_CoA_original', rel)
+                     for rel in ('HealBot.lua', 'HealBot_Action.lua', 'HealBot_Options.lua')},
+        'edit': ['HealBot.lua', 'HealBot_Action.lua', 'HealBot_Options.lua'],
+        'copy': [],
+    },
 }
 CONTEXT = 2  # unchanged lines kept on each side of a change, so each hunk is found in one place
 

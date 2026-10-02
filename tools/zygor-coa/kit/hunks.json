@@ -224,5 +224,44 @@
    ]
   },
   "copy": []
+ },
+ "healbot": {
+  "edit": {
+   "HealBot.lua": [
+    {
+     "old": "    [\"DEAT\"] = { [HEALBOT_DEBUFF_UNSTABLE_AFFL] = true,},\n};\n\nlocal HealBot_Ignore_Movement_Debuffs = {",
+     "new": "    [\"DEAT\"] = { [HEALBOT_DEBUFF_UNSTABLE_AFFL] = true,},\n};\n\n-- Conquest of Azeroth classes have no class-specific debuffs to ignore.\nlocal HealBot_CoA_NoIgnoredDebuffs = {}\n\nlocal HealBot_Ignore_Movement_Debuffs = {"
+    },
+    {
+     "old": "end\n\nlocal hbClassHoTwatch={}\nfunction HealBot_configClassHoT(class, race)\n    hbClassHoTwatch=HealBot_Globals.WatchHoT[class]\n",
+     "new": "end\n\n-- Conquest of Azeroth classes (Chronomancer = \"CHRO\", ...) have no HoT-watch settings of their own:\n-- they get a copy of the Warrior's defaults (a class without HoTs), so the class-keyed lookups\n-- below always find a table.\nfunction HealBot_CoA_EnsureClassHoTwatch(class)\n    if not class then return end\n    local defaults=HealBot_GlobalsDefaults.WatchHoT\n    if not defaults[class] then\n        defaults[class]={}\n        for sName,x in pairs(defaults[\"WARR\"] or {}) do defaults[class][sName]=x end\n    end\n    HealBot_Globals.WatchHoT=HealBot_Globals.WatchHoT or {}\n    HealBot_Globals.WatchHoT[class]=HealBot_Globals.WatchHoT[class] or {}\nend\n\nlocal hbClassHoTwatch={}\nfunction HealBot_configClassHoT(class, race)\n    HealBot_CoA_EnsureClassHoTwatch(class)\n    hbClassHoTwatch=HealBot_Globals.WatchHoT[class]\n"
+    },
+    {
+     "old": "                            checkthis=false;\n                        elseif HealBot_Config.IgnoreClassDebuffs==1 then\n                            HealBot_Ignore_Debuffs_Class=HealBot_Ignore_Class_Debuffs[strsub(DebuffClass,1,4)];\n                            if HealBot_Ignore_Debuffs_Class[dName] then\n                                checkthis=false;",
+     "new": "                            checkthis=false;\n                        elseif HealBot_Config.IgnoreClassDebuffs==1 then\n                            HealBot_Ignore_Debuffs_Class=HealBot_Ignore_Class_Debuffs[strsub(DebuffClass,1,4)] or HealBot_CoA_NoIgnoredDebuffs;\n                            if HealBot_Ignore_Debuffs_Class[dName] then\n                                checkthis=false;"
+    },
+    {
+     "old": "    local _,class=UnitClass(\"player\")\n    class=strsub(class,1,4)\n    local hbClassHoTwatchDef=HealBot_GlobalsDefaults.WatchHoT[class]\n   -- hbClassHoTwatch=HealBot_Globals.WatchHoT[class]",
+     "new": "    local _,class=UnitClass(\"player\")\n    class=strsub(class,1,4)\n    HealBot_CoA_EnsureClassHoTwatch(class)\n    local hbClassHoTwatchDef=HealBot_GlobalsDefaults.WatchHoT[class]\n   -- hbClassHoTwatch=HealBot_Globals.WatchHoT[class]"
+    }
+   ],
+   "HealBot_Action.lua": [
+    {
+     "old": "        _,class=UnitClass(HealBot_UnitID[hbGUID])        \n    end\n    if class then\n        class = strsub(class,1,4)\n    else\n        class = \"WARR\"\n    end\n    return hbClassCols[class].r, hbClassCols[class].g, hbClassCols[class].b",
+     "new": "        _,class=UnitClass(HealBot_UnitID[hbGUID])        \n    end\n    local classFile=class\n    if class then\n        class = strsub(class,1,4)\n    else\n        class = \"WARR\"\n    end\n    if not hbClassCols[class] then\n        -- Conquest of Azeroth classes: the client's own class colour, white without one\n        local col=classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]\n        if col and col.r then return col.r, col.g, col.b end\n        return 1, 1, 1\n    end\n    return hbClassCols[class].r, hbClassCols[class].g, hbClassCols[class].b"
+    }
+   ],
+   "HealBot_Options.lua": [
+    {
+     "old": "\nfunction HealBot_Options_InitBuffClassList()\n    HealBot_Buff_Spells_Class_List = HealBot_Buff_Spells_Total_List[strsub(HealBot_PlayerClassEN,1,4)]\n    table.sort (HealBot_Buff_Spells_Class_List)\nend",
+     "new": "\nfunction HealBot_Options_InitBuffClassList()\n    -- Conquest of Azeroth classes have no class buffs listed: an empty list\n    HealBot_Buff_Spells_Class_List = HealBot_Buff_Spells_Total_List[strsub(HealBot_PlayerClassEN,1,4)] or {}\n    table.sort (HealBot_Buff_Spells_Class_List)\nend"
+    },
+    {
+     "old": "}\nfunction HealBot_Options_GetDebuffSpells_List(class)\n    return HealBot_Debuff_Spells[class]\nend\n",
+     "new": "}\nfunction HealBot_Options_GetDebuffSpells_List(class)\n    return HealBot_Debuff_Spells[class] or {} -- classes without cure spells (and Conquest of Azeroth classes): none\nend\n"
+    }
+   ]
+  },
+  "copy": []
  }
 }

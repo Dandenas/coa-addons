@@ -1,6 +1,6 @@
-"""Re-applies the Conquest of Azeroth changes to Zygor Guides Viewer RM and TomTom.
+"""Re-applies the Conquest of Azeroth changes to Zygor Guides Viewer RM, TomTom and HealBot.
 
-Run it after installing a new version of either addon:
+Run it after installing a new version of any of them:
 
     python apply_coa_patch.py              apply to D:\\COA Client, then run the tests
     python apply_coa_patch.py --dry-run    only report what would change
@@ -100,7 +100,7 @@ def plan(addon, root, kit):
     return changes, copies, report, errors
 
 
-def run_tests(zygor_root, tomtom_root):
+def run_tests(zygor_root, tomtom_root, healbot_root=None):
     tests = []
     fixtures = [os.path.join(TOOLS, 'fixtures', f) for f in ('probe_sunstrider.lua', 'probe_human_start.lua')]
     if zygor_root:
@@ -116,6 +116,8 @@ def run_tests(zygor_root, tomtom_root):
                         tests.append([LUA, os.path.join(dirpath, n), zygor_root])
     if tomtom_root:
         tests.append([LUA, 'test_tomtom_area_ids.lua', tomtom_root, fixtures[1]])
+    if healbot_root:
+        tests.append([LUA, 'test_healbot_coa.lua', healbot_root])
     failed = 0
     for t in tests:
         r = subprocess.run(t, cwd=TOOLS, capture_output=True, text=True, stdin=subprocess.DEVNULL)
@@ -130,15 +132,16 @@ def run_tests(zygor_root, tomtom_root):
 
 
 def main():
-    ap = argparse.ArgumentParser(description='Re-apply the CoA changes to Zygor and TomTom.')
+    ap = argparse.ArgumentParser(description='Re-apply the CoA changes to Zygor, TomTom and HealBot.')
     ap.add_argument('--zygor', default=os.path.join(ADDONS, 'ZygorGuidesViewerRM'))
     ap.add_argument('--tomtom', default=os.path.join(ADDONS, 'TomTom'))
+    ap.add_argument('--healbot', default=os.path.join(ADDONS, 'HealBot'))
     ap.add_argument('--dry-run', action='store_true', help='report only; change nothing')
     ap.add_argument('--skip-tests', action='store_true')
     args = ap.parse_args()
 
     kit = json.load(open(os.path.join(HERE, 'hunks.json'), encoding='latin-1'))
-    roots = {'zygor': args.zygor, 'tomtom': args.tomtom}
+    roots = {'zygor': args.zygor, 'tomtom': args.tomtom, 'healbot': args.healbot}
     plans, all_errors = {}, []
     for addon, root in roots.items():
         if not os.path.isdir(root):
@@ -182,7 +185,7 @@ def main():
     if args.skip_tests:
         return 0
     print('\nRunning tests...')
-    ok = run_tests(plans.get('zygor', (None,))[0], plans.get('tomtom', (None,))[0])
+    ok = run_tests(plans.get('zygor', (None,))[0], plans.get('tomtom', (None,))[0], plans.get('healbot', (None,))[0])
     print('\nDone. Fully restart the game (not /reload) so new files are picked up.' if ok else
           '\nSome tests failed - check the output above before playing.')
     return 0 if ok else 1
