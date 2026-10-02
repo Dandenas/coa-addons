@@ -23,7 +23,7 @@ TARGETS = {
         'copy': ['CoAZones.lua', 'Data-WOTLK/CoA-ClassSpecs.lua', 'Libs/Astrolabe/AstrolabeCoAData.lua',
                  'ZygorTalentAdvisorCOA/files.xml', 'ZygorTalentAdvisorCOA/Data.lua',
                  'ZygorTalentAdvisorCOA/ZygorTalentAdvisorCOA.lua', 'ZygorTalentAdvisorCOA/Popout.lua',
-                 'ZygorTalentAdvisorCOA/Overlay.lua'],
+                 'ZygorTalentAdvisorCOA/Overlay.lua', 'ZygorTalentAdvisorCOA/Preview.lua'],
     },
     'tomtom': {
         'patched': os.path.join(ADDONS, 'TomTom'),

@@ -136,7 +136,8 @@
    "ZygorTalentAdvisorCOA/Data.lua",
    "ZygorTalentAdvisorCOA/ZygorTalentAdvisorCOA.lua",
    "ZygorTalentAdvisorCOA/Popout.lua",
-   "ZygorTalentAdvisorCOA/Overlay.lua"
+   "ZygorTalentAdvisorCOA/Overlay.lua",
+   "ZygorTalentAdvisorCOA/Preview.lua"
   ]
  },
  "tomtom": {

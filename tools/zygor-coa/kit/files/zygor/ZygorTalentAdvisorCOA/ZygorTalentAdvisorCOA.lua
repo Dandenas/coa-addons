@@ -44,17 +44,12 @@ end
 
 local function Normalize(s) return (tostring(s or ""):lower():gsub("[%s'%-]", "")) end
 
--- The active spec, in the data's spec names. The client's internal spec file names can differ
--- from the display names the builds use (Chronomancer "Duality" = Infinite), so file names go
--- through the alias table first.
-function ZTAC:DetectSpec()
+-- The data's spec name for a client spec info table (C_ClassInfo). The client's internal spec
+-- file names can differ from the display names the builds use (Chronomancer "Duality" =
+-- Infinite), so file names go through the alias table first.
+function ZTAC:MatchSpecInfo(info)
 	local cls = self:GetClassData()
-	local api = CA()
-	if not (cls and api and C_ClassInfo) then return nil end
-	local specID = Call(api.GetActiveChrSpec)
-	if not specID then return nil end
-	local info = Call(C_ClassInfo.GetSpecInfoByID, specID)
-	if type(info) ~= "table" then return nil end
+	if not cls or type(info) ~= "table" then return nil end
 	local function byFile(name)
 		if not name then return end
 		local alias = cls.aliases and cls.aliases[name]
@@ -70,6 +65,15 @@ function ZTAC:DetectSpec()
 		end
 	end
 	return byFile(info.Spec) or byName(info.Name)
+end
+
+-- The active spec, in the data's spec names.
+function ZTAC:DetectSpec()
+	local api = CA()
+	if not (self:GetClassData() and api and C_ClassInfo) then return nil end
+	local specID = Call(api.GetActiveChrSpec)
+	if not specID then return nil end
+	return self:MatchSpecInfo((Call(C_ClassInfo.GetSpecInfoByID, specID)))
 end
 
 function ZTAC:GetSpecNames()
@@ -175,6 +179,7 @@ function ZTAC:Evaluate()
 end
 
 function ZTAC:Refresh()
+	if self.UpdatePreview then self:UpdatePreview() end -- first, so the panel and numbers follow it
 	if self.Popout and self.Popout:IsShown() then self.Popout:Update() end
 	if self.UpdateOverlay then self:UpdateOverlay() end
 end
@@ -218,6 +223,12 @@ SlashCmdList.ZYGORTALENTADVISORCOA = function(msg)
 	end
 	if msg == "debug" then
 		print("|cffffbb00Zygor CoA Talent Advisor:|r " .. ZTAC:DescribeOverlay())
+		return
+	end
+	if msg == "preview" then
+		ZTAC:SetPreviewEnabled(not ZTAC:IsPreviewEnabled())
+		print("|cffffbb00Zygor CoA Talent Advisor:|r picking another spec's build " .. (ZTAC:IsPreviewEnabled()
+			and "shows its tree in the talent window." or "no longer changes the talent window."))
 		return
 	end
 	if msg == "auto" then

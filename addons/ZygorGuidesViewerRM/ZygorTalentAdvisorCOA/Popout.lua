@@ -171,7 +171,7 @@ local function CreatePopout()
 			self.summary:SetText("No build data for this character.")
 			return
 		end
-		UIDropDownMenu_SetText(self.drop, state.spec .. (state.autoSpec and " (auto)" or ""))
+		UIDropDownMenu_SetText(self.drop, state.spec .. (state.autoSpec and " (auto)" or (ZTAC.previewSpecID and " (preview)" or "")))
 		local detected = state.detectedSpec and ("Active spec: " .. state.detectedSpec) or "Active spec: not chosen yet"
 		self.summary:SetText(("%s %s - %s\n%s   |cff7f9fbfClass %d/%d   Spec %d/%d|r"):format(
 			state.className, state.spec, state.role or "", detected,
@@ -254,6 +254,7 @@ function ZTAC:HookTalentFrame()
 	if not talent or self.talentHooked or not self:IsActive() then return end
 	self.talentHooked = true
 	if ZTAC.HookTreeOverlay then ZTAC:HookTreeOverlay() end
+	if ZTAC.HookPreview then ZTAC:HookPreview() end
 	talent:HookScript("OnShow", function()
 		if ZTAC.UpdateOverlay then ZTAC:UpdateOverlay() end
 		if ZTAC:GetSettings().autoShow == false then return end

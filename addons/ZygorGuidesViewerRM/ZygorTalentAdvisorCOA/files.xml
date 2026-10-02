@@ -5,4 +5,5 @@
 	<Script file="ZygorTalentAdvisorCOA.lua"/>
 	<Script file="Popout.lua"/>
 	<Script file="Overlay.lua"/>
+	<Script file="Preview.lua"/>
 </Ui>

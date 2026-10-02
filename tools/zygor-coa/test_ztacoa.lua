@@ -48,11 +48,23 @@ local function Load(classToken, opts)
 		GetActiveChrSpec = function() return opts.specID end,
 	}
 	if opts.noCA then _G.C_CharacterAdvancement = nil end
-	_G.C_ClassInfo = { GetSpecInfoByID = function(id) return opts.specInfo end }
+	-- opts.specs: the class's client specs, { { ID, Spec (file name), Name }, ... }
+	local specs = opts.specs or {}
+	_G.C_ClassInfo = {
+		GetSpecInfoByID = function(id)
+			if opts.specInfo then return opts.specInfo end
+			for _, s in ipairs(specs) do if s.ID == id then return s end end
+		end,
+		GetAllSpecs = function() local files = {} for i, s in ipairs(specs) do files[i] = s.Spec end return files end,
+		GetSpecInfo = function(_, file) for _, s in ipairs(specs) do if s.Spec == file then return s end end end,
+	}
+	_G.IsModifiedClick = function() return opts.modified == true end
+	_G.UIErrorsFrame = { AddMessage = function(_, msg) _G.lastUIError = msg end }
 	dofile(dir .. "Data.lua")
 	dofile(dir .. "ZygorTalentAdvisorCOA.lua")
 	dofile(dir .. "Popout.lua")
 	dofile(dir .. "Overlay.lua")
+	dofile(dir .. "Preview.lua")
 	return _G.ZygorTalentAdvisorCOA, _G.ZygorTalentAdvisorCOA_Data
 end
 
@@ -305,6 +317,73 @@ do
 	f.userMoved = true
 	talent.scripts.OnHide(talent)
 	assert(not f:IsShown(), "closes with the talent window even when moved")
+end
+
+-- 10. Preview: a build picked for another spec shows that spec's tree in the talent window.
+do
+	-- Chronomancer's client spec files differ from the build names: Time = Artificer,
+	-- Duality = Infinite, Displacement = Time.
+	local SPECS = {
+		{ ID = 101, Spec = "Time", Name = "Artificer" },
+		{ ID = 102, Spec = "Duality", Name = "Infinite" },
+		{ ID = 103, Spec = "Displacement", Name = "Time" },
+	}
+	local function Setup(opts)
+		local clicks = 0
+		local button = Widget(); button.entry = { ID = 1 }
+		button.GetFrameLevel = function() return 5 end
+		button.GetScript = function(self, name) return self.scripts[name] end
+		button.scripts.OnClick = function() clicks = clicks + 1 end
+		local specTree = Widget()
+		specTree.Label = Widget()
+		specTree.GetFrameLevel = function() return 5 end
+		specTree.EnumerateNodes = function() local done return function() if not done then done = true return button end end end
+		local classTree = Widget()
+		classTree.EnumerateNodes = function() return function() return nil end end
+		local view = { ClassTree = classTree, SpecTree = specTree, specID = opts.specID }
+		function view:SetSpecID(id) self.specID = id end
+		local talent = Widget(); talent.TreeView = view
+		-- the window's own reset to the active spec (on open and on spec change)
+		function talent:UpdateActiveSpec() if opts.specID then self.TreeView:SetSpecID(opts.specID) end end
+		opts.level, opts.talentFrame, opts.specs = 60, talent, SPECS
+		local Z = Load("CHRONOMANCER", opts)
+		Z:HookTalentFrame()
+		return Z, talent, view, function() button.scripts.OnClick(button, "LeftButton"); return clicks end
+	end
+
+	local Z, talent, view, click = Setup({ specID = 102 }) -- active spec: Infinite
+	assert(Z:GetSpecIDFor("Artificer") == 101 and Z:GetSpecIDFor("Time") == 103, "spec names map to client spec IDs through the aliases")
+	assert(view.specID == 102 and not Z.previewSpecID, "Auto: no preview")
+	local f = Z:GetPopout(); f:Show()
+	Z:SetSelectedSpec("Time")
+	assert(view.specID == 103 and Z.previewSpecID == 103, "picking Time shows the Time tree")
+	assert(view.SpecTree.ZTACPreviewBanner.shown, "preview banner shown")
+	assert(_G.lastDropText == "Time (preview)", "panel says preview, got " .. tostring(_G.lastDropText))
+	_G.lastUIError = nil
+	assert(click() == 0 and _G.lastUIError, "clicks on the previewed tree are ignored, with a message")
+	talent:UpdateActiveSpec() -- window reopened: it resets to the active spec, the preview comes back
+	assert(view.specID == 103, "preview re-applied after the window resets itself")
+	Z:SetSelectedSpec("Infinite") -- the active spec: no preview
+	assert(view.specID == 102 and not Z.previewSpecID, "picking the active spec returns to it")
+	assert(not view.SpecTree.ZTACPreviewBanner.shown, "banner hidden")
+	assert(click() == 1, "clicks work again")
+	Z:SetSelectedSpec("Time")
+	Z:SetPreviewEnabled(false)
+	assert(view.specID == 102 and not Z.previewSpecID, "/ztacoa preview off returns to the active spec")
+	Z:SetPreviewEnabled(true)
+	assert(view.specID == 103, "and back on")
+	Z:SetSelectedSpec(nil)
+	assert(view.specID == 102, "Auto returns to the active spec")
+
+	-- Shift-click still links the spell while previewing.
+	Z, talent, view, click = Setup({ specID = 102, modified = true })
+	Z:SetSelectedSpec("Time")
+	assert(view.specID == 103 and click() == 1, "chat-link clicks pass through")
+
+	-- No active spec yet (the window shows its spec picker): never preview.
+	Z, talent, view = Setup({})
+	Z:SetSelectedSpec("Time")
+	assert(view.specID == nil and not Z.previewSpecID, "no preview without an active spec")
 end
 
 realPrint("ZygorTalentAdvisorCOA regression passed")
