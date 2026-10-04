@@ -263,5 +263,16 @@
    ]
   },
   "copy": []
+ },
+ "buttonforge": {
+  "edit": {
+   "Util.lua": [
+    {
+     "old": "\tCompanion Functions\n-------------------------------------------]]\nfunction Util.CacheCompanions()\n    Util.Critters = {};\n    for i = 1, GetNumCompanions(\"CRITTER\") do\n        local Id, Name = GetCompanionInfo(\"CRITTER\", i);\n\t\tif (not Name) then\n\t\t\treturn;\n\t\tend\n        Util.Critters[Name] = i;\n    end\n\t\n    Util.Mounts = {};\n    for i = 1, GetNumCompanions(\"MOUNT\") do\n        local Id, Name = GetCompanionInfo(\"MOUNT\", i);\n\t\tif (not Name) then\n\t\t\treturn;\n\t\tend\n        Util.Mounts[Name] = i;\n    end\n\tUtil.CompanionsCached = true;\nend",
+     "new": "\tCompanion Functions\n-------------------------------------------]]\n-- Conquest of Azeroth / Ascension: the vanity collections hold some companions that never return a\n-- name (21 of 861 mounts here), and aborting on the first one meant the cache - and with it Button\n-- Forge's whole start-up - never completed (ButtonForgeSave stayed nil). Nameless entries are now\n-- skipped; the cache is only left for a later retry while most names are still missing (data not\n-- loaded yet), which is what the original early return was for.\nlocal function CacheCompanionType(Type, Cache)\n    local Total, Missing = GetNumCompanions(Type), 0;\n    for i = 1, Total do\n        local Id, Name = GetCompanionInfo(Type, i);\n\t\tif (Name) then\n\t\t\tCache[Name] = i;\n\t\telse\n\t\t\tMissing = Missing + 1;\n\t\tend\n    end\n\treturn Total == 0 or Missing * 2 < Total;\nend\n\nfunction Util.CacheCompanions()\n    Util.Critters = {};\n    if (not CacheCompanionType(\"CRITTER\", Util.Critters)) then\n\t\treturn;\n\tend\n\n    Util.Mounts = {};\n    if (not CacheCompanionType(\"MOUNT\", Util.Mounts)) then\n\t\treturn;\n\tend\n\tUtil.CompanionsCached = true;\nend"
+    }
+   ]
+  },
+  "copy": []
  }
 }

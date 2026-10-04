@@ -13,6 +13,7 @@ robocopy "%ADDONS%\ZygorGuidesViewerRM" "%REPO%addons\ZygorGuidesViewerRM" %RC% 
 robocopy "%ADDONS%\TomTom" "%REPO%addons\TomTom" %RC% /XD _CoA_original _CoA_backup*
 robocopy "%ADDONS%\CoAMapProbe" "%REPO%addons\CoAMapProbe" %RC%
 robocopy "%ADDONS%\HealBot" "%REPO%addons\HealBot" %RC% /XD _CoA_original _CoA_backup*
+robocopy "%ADDONS%\ButtonForge" "%REPO%addons\ButtonForge" %RC% /XD _CoA_original _CoA_backup*
 robocopy "%TOOLS%\zygor-coa" "%REPO%tools\zygor-coa" %RC% /XD __pycache__ /XF *.new *.pyc
 copy /y "%TOOLS%\ascension-extensions-reconstruction-build.bat" "%REPO%tools\" >nul
 for %%F in (Restore-CoA-UI.bat Uninstall-ModernRenderer.bat) do if exist "%CLIENT%\%%F" copy /y "%CLIENT%\%%F" "%REPO%client-scripts\" >nul

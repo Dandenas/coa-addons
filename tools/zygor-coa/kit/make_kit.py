@@ -45,6 +45,14 @@ TARGETS = {
         'edit': ['HealBot.lua', 'HealBot_Action.lua', 'HealBot_Options.lua'],
         'copy': [],
     },
+    'buttonforge': {
+        'patched': os.path.join(ADDONS, 'ButtonForge'),
+        # Button Forge 0.9.4 aborted its companion cache on the first nameless companion (Ascension's
+        # collections have some), so it never finished starting up. Original backed up before patching.
+        'pristine': {'Util.lua': os.path.join(ADDONS, 'ButtonForge', '_CoA_original', 'Util.lua')},
+        'edit': ['Util.lua'],
+        'copy': [],
+    },
 }
 CONTEXT = 2  # unchanged lines kept on each side of a change, so each hunk is found in one place
 

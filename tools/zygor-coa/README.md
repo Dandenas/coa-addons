@@ -24,12 +24,14 @@ If it says a change **"no longer fits"**, the addon's author changed code that e
 | Weapon DPS weights erased for every class (upstream bug) | Rename only when the short key is used | `Item-ItemScore.lua` |
 | 49 "Error loading" lines at startup | Drop empty `GuideNN` / `buildNN` placeholder entries | `Guides/Autoload.xml`, `ZygorTalentAdvisor/Builds/Autoload.xml` |
 | TomTom crashed on right-click in CoA zones (area ID looked up as a zone index) | Area-ID lookups above, plus a guard against a missing map name | `TomTom.lua` |
+| Button Forge never finished starting up (`ButtonForgeSave` nil, errors from every bar/config button): its companion cache aborted on the first nameless companion, and Ascension's collections have some (21 of 861 mounts) | Skip nameless companions; still wait for a retry while most names are missing (data not loaded yet) | Button Forge: `Util.lua` (original in `ButtonForge\_CoA_original\`) |
 | HealBot keys its class tables by the class's first four letters; CoA classes (Chronomancer = `CHRO`, ...) are in none, so it failed at login and on CoA party members (class colours, ignored class debuffs) | CoA classes get the Warrior's HoT-watch defaults, the client's own `RAID_CLASS_COLORS`, and empty buff / cure-spell / ignored-debuff lists. CoA heal spells themselves are not known to HealBot | HealBot: `HealBot.lua`, `HealBot_Action.lua`, `HealBot_Options.lua` (originals in `HealBot\_CoA_original\`) |
 
 ## Files here
 
 - `Apply-ZygorCoA.bat`, `kit\apply_coa_patch.py`: re-apply the changes.
 - `kit\hunks.json`, `kit\files\`: the changes themselves. Regenerate them with `kit\make_kit.py` from the clean download and the patched install.
-- `test_*.lua`, `fixtures\`: regression tests, using real position samples from the client (Sunstrider Isle and Human start area). `test_healbot_coa.lua` loads HealBot's own files with stand-ins for the game API.
+- `test_*.lua`, `fixtures\`: regression tests, using real position samples from the client (Sunstrider Isle and Human start area). `test_healbot_coa.lua` and `test_buttonforge_coa.lua` load those addons' own files with stand-ins for the game API.
 - `mpq.py`, `gen.py`, `gen2.py`, `gen3.py`: rebuild `AstrolabeCoAData.lua` from the client's MPQ archives if CoA changes its maps. They need `wms.csv` and `probe_zones.csv`, exported from Astrolabe.lua and a `/coaprobe` dump.
+- `Migrate-RealmName.bat`, `realm_migrate.py`: after a realm rename ("Conquest of Azeroth" → "Nozdormu", 2026-10-03), move saved addon settings to the new realm name (copies the per-character folders, renames the realm inside the account-wide SavedVariables and Config.wtf). Dry run by default; `--apply` with the game closed and before the first login on the new name.
 - Lua 5.1 for the tests: `C:\Users\dotyt\tools\lua-5.1.5\lua5.1.exe`.
