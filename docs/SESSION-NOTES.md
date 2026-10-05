@@ -1,6 +1,6 @@
 # Session notes: CoA client and addon work
 
-Resume notes for Claude sessions. Last updated **2026-10-04**.
+Resume notes for Claude sessions. Last updated **2026-10-04** (after the client update).
 
 **To resume in a new session:**
 > Read `C:\Users\dotyt\Documents\GitHub\coa-addons\docs\SESSION-NOTES.md` and the memory index.
@@ -29,22 +29,54 @@ The memory folder (`C:\Users\dotyt\.claude\projects\C--Users-dotyt-Desktop-Strea
 | Extensions.dll | Rebuilt at firstoni 5197e75 and installed. Previous DLL: `D:\COA Client\_CoA_UI_backup\Extensions.dll.07b3a00` |
 | dbc_clientset | Item / ItemDisplayInfo / CreatureDisplayInfo.dbc from patch-M, in `C:\Users\dotyt\tools\dbc_clientset\`, copied to the server |
 | Realm cards, spec slots | Realm cards per realm. Spec slots and Tomes II–XX work since server #6244/#6297 |
+| Client update 2026-10-04 | Launcher release **2026-10-03-01** installed and compared (see "Client update" below) |
+
+## Client update (2026-10-04)
+
+- **Snapshots:** made with `C:\Users\dotyt\tools\zygor-coa\client_snapshot.py`:
+  - `snap <name>`: SHA-256 list of the client, plus copies of our customised files;
+  - `diff <old> <new>`.
+  They are in `C:\Users\dotyt\tools\coa-snapshots\`: `before-update` and `after-update-20261003-01`. `before-update\files\` has our Extensions.dll, d3d9.dll, the old patch-B/T/M, realmlist, renderer .ini files, WTF and the 28 removed `Ascension*` addon folders.
+- **What changed:**
+  - **patch-B (8 → 229 MB):** +289 `Interface\GLUES` art files, identical to the loose ones we already had. AccountLogin.lua and DressUpFrame.lua changed only in line endings. No GlueXML/FrameXML/addon code changed.
+  - **patch-M:** only `CreatureDisplayInfo.dbc` changed (+13 records).
+  - **patch-T, Ascension.exe:** unchanged.
+  - **README.txt:** updated.
+- **Addons removed by the launcher:**
+  - the 28 loose `Ascension*` folders: 27 are built into patch-B; **AscensionRaidLootCompanion is not**, and it's backed up in the snapshot;
+  - also **ProfessionMenu, Refactor, VanillaGuide and YABB** (not backed up; the launcher can reinstall them). It's not yet confirmed whether the user removed these.
+- **Still on our builds:** our **Extensions.dll (5197e75)** and the **Modern Renderer d3d9.dll**.
+  - The launcher wants to replace our DLL with the official one (6,865,920 bytes, sha256 b7760201…). That step fails on this PC: D: is **exFAT**, and the launcher's hard-link check throws `EISDIR`, which isn't in its fallback list.
+  - Patching `app.asar` locally doesn't work: the launcher checks its own files and won't start. That was reverted; the backup is `app.asar.bak-20261004`.
+  - No manual download exists, so **wait for a launcher hotfix**. Then snapshot again and compare their DLL with ours.
+- **The launcher rewrites `Data\enUS\realmlist.wtf`** to `logon.coa-development.org` after every client update and every Play click. It was restored to `set realmlist 192.168.1.23` on 10/04. The user launches `Ascension.exe` directly, so it sticks until the next launcher update.
+- **dbc_clientset:** refreshed 10/04 with the new CreatureDisplayInfo.dbc (sha256 225b019e…); the zip was rebuilt. The user copies it to the server.
+- **Server update 10/04:** the server session checked the incoming commits (b392d4a5, e7c0ccab, 4c71515a, af8f4650): **no wire change, and nothing needs a DLL newer than 5197e75.** Item rows now also arrive after login, on demand.
 
 ## Waiting on the user
 
-1. **Button Forge in-game test:** `/reload`, use bars, Create Bar, Advanced tools. Then run `Sync-ToRepo.bat` and commit in GitHub Desktop (suggested summary: *Button Forge: fix start-up with Ascension's nameless mounts*).
+1. **First play after the 10/04 client update.** Wait for the server session's "live and stable" message and copy `dbc_clientset.zip` to the server first. Then check:
+   - items seen for the first time this session show an icon and name, not a red "?" (re-hover once);
+   - Button Forge (`/reload`, bars, Create Bar, Advanced tools);
+   - the talent advisor (panel, preview, Load build);
+   - no UI errors at login.
+   Button Forge is already committed. Sync and commit `client_snapshot.py` and these notes next time.
+   Still to answer: did the user remove ProfessionMenu, Refactor, VanillaGuide and YABB, and do they want AscensionRaidLootCompanion back?
 2. **Talent advisor "switch to spec slot + load build":** planned and reviewed; **don't build until the user says go**. Checks before building:
    - whether the talent window closes on a slot swap;
    - event timing after the swap;
    - loading into an empty slot;
    - whether `GetInspectedBuild` works on other slots.
 
-## On the next official client patch
+## On the next client update (launcher)
 
-- **Before installing:** take a baseline snapshot (read-only hash manifest). Show the script to the user first; it isn't approved yet.
-- **After installing:** three-way compare: the new patch, our client, and the extensions-reconstruction repo.
-- Refresh `dbc_clientset` if the item/display DBCs changed, re-test the advisor and Zygor map data, and run the test suite.
-- Details: memory `coa-client-patch-compare.md`.
+1. Close the game and launcher, then run `python client_snapshot.py snap <name>`. The script is approved; running it still needs the user's go.
+2. The user updates in the launcher. Don't start the game.
+3. Snapshot again and `diff` the two. Diff the MPQ members of patch-B/M/T against the copies in the old snapshot.
+4. Re-check the realmlist, and refresh `dbc_clientset` if Item / ItemDisplayInfo / CreatureDisplayInfo changed. patch-M is their only Data MPQ.
+5. If the official Extensions.dll arrives, compare it with ours and with the reconstruction repo. Re-test the advisor and Zygor map data.
+
+Details: memories `coa-client-patch-compare.md` and `coa-launcher.md`.
 
 ## Backlog (parked)
 
@@ -59,6 +91,8 @@ Retail-style character select (outline only), HealBot CoA spell gaps, the realm-
 | Re-apply kit | `C:\Users\dotyt\tools\zygor-coa\Apply-ZygorCoA.bat` (`--dry-run` to preview): zygor, tomtom, healbot, buttonforge. Regenerate with `kit\make_kit.py` |
 | Tests | `C:\Users\dotyt\tools\lua-5.1.5\lua5.1.exe`, 28 tests (run by the kit) |
 | Extensions.dll source | `C:\Users\dotyt\tools\ascension-extensions-reconstruction` |
+| Client snapshots | `C:\Users\dotyt\tools\zygor-coa\client_snapshot.py` → `C:\Users\dotyt\tools\coa-snapshots\` |
+| CoA launcher | `%LOCALAPPDATA%\Programs\ConquestOfAzeroth\` (settings in `%APPDATA%\Conquest of AzerothCore\settings.json`, state in `D:\COA Client\.coa-launcher\`) |
 
 ## Server
 
