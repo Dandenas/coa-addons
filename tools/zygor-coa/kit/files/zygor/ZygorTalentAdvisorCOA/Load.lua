@@ -214,7 +214,6 @@ function ZTAC:DescribeLastLoad()
 	return lines
 end
 
-StaticPopupDialogs = StaticPopupDialogs or {}
 StaticPopupDialogs["ZYGORTALENTADVISORCOA_LOAD_BUILD"] = {
 	text = "%s",
 	button1 = "Load",

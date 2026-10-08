@@ -274,5 +274,53 @@
    ]
   },
   "copy": []
+ },
+ "questie": {
+  "edit": {
+   "Modules/QuestieServer.lua": [
+    {
+     "old": "Questie.IsValanior  = false\n\nif _G.IsAscensionServer or lRealmName:find(\"ascension\") or lRealmName:find(\"area 52\") or\n   lRealmName:find(\"al'ar\") or lRealmName:find(\"thrall\") or lRealmName:find(\"bronzebeard\") or lRealmName:find(\"warcraft reborn\") then\n    Questie.IsAscension = true",
+     "new": "Questie.IsValanior  = false\n\nif (_G.IsAscensionServer or _G.C_CharacterAdvancement) or lRealmName:find(\"ascension\") or lRealmName:find(\"area 52\") or\n   lRealmName:find(\"al'ar\") or lRealmName:find(\"thrall\") or lRealmName:find(\"bronzebeard\") or lRealmName:find(\"warcraft reborn\") then\n    Questie.IsAscension = true"
+    }
+   ],
+   "Compat/Compat.lua": [
+    {
+     "old": "    -- keep objective pins stuck in the wrong place. Prefer the real Sunstrider\n    -- child map when we know the player is on that realm/zone.\n    if _G.IsAscensionServer and (GetRealZoneText and GetRealZoneText() == \"Sunstrider Isle\") then\n        return 1241\n    end",
+     "new": "    -- keep objective pins stuck in the wrong place. Prefer the real Sunstrider\n    -- child map when we know the player is on that realm/zone.\n    if (_G.IsAscensionServer or _G.C_CharacterAdvancement) and (GetRealZoneText and GetRealZoneText() == \"Sunstrider Isle\") then\n        return 1241\n    end"
+    }
+   ]
+  },
+  "copy": []
+ },
+ "questiedb": {
+  "edit": {
+   "AscensionLoader.lua": [
+    {
+     "old": "    local realmName = GetRealmName() or \"\"\n    -- Broaden the check to match QuestieServer.lua logic\n    local isAscension = _G.IsAscensionServer or realmName:find(\"Ascension\") or realmName:find(\"Area 52\") or\n                      realmName:find(\"Al'ar\") or realmName:find(\"Thrall\") or realmName:find(\"Elune\") or\n                      realmName:find(\"Bronzebeard\") or realmName:find(\"Rexxar\") or realmName:find(\"Grizzly Hills\") or",
+     "new": "    local realmName = GetRealmName() or \"\"\n    -- Broaden the check to match QuestieServer.lua logic\n    local isAscension = (_G.IsAscensionServer or _G.C_CharacterAdvancement) or realmName:find(\"Ascension\") or realmName:find(\"Area 52\") or\n                      realmName:find(\"Al'ar\") or realmName:find(\"Thrall\") or realmName:find(\"Elune\") or\n                      realmName:find(\"Bronzebeard\") or realmName:find(\"Rexxar\") or realmName:find(\"Grizzly Hills\") or"
+    }
+   ],
+   "Zones/AscensionUiMapData.lua": [
+    {
+     "old": "print(\"[AscensionUiMapData] Loading file, realm=\" .. tostring(GetRealmName()))\nlocal realmName = GetRealmName() or \"\"; if not (_G.IsAscensionServer or realmName:find(\"Elune\") or realmName:find(\"Area 52\") or realmName:find(\"Bronzebeard\") or realmName:find(\"Rexxar\") or realmName:find(\"Grizzly Hills\") or realmName:find(\"CoA\") or realmName:find(\"Conquest\") or realmName:find(\"Vol\")) then print(\"[AscensionUiMapData] Skipped due to realm check\"); return end\n---@class AscensionUiMapData\nAscensionUiMapData = AscensionUiMapData or {}",
+     "new": "print(\"[AscensionUiMapData] Loading file, realm=\" .. tostring(GetRealmName()))\nlocal realmName = GetRealmName() or \"\"; if not ((_G.IsAscensionServer or _G.C_CharacterAdvancement) or realmName:find(\"Elune\") or realmName:find(\"Area 52\") or realmName:find(\"Bronzebeard\") or realmName:find(\"Rexxar\") or realmName:find(\"Grizzly Hills\") or realmName:find(\"CoA\") or realmName:find(\"Conquest\") or realmName:find(\"Vol\")) then print(\"[AscensionUiMapData] Skipped due to realm check\"); return end\n---@class AscensionUiMapData\nAscensionUiMapData = AscensionUiMapData or {}"
+    }
+   ],
+   "Zones/AscensionZoneTables.lua": [
+    {
+     "old": "local realmName = GetRealmName() or \"\"; if not (_G.IsAscensionServer or realmName == \"Elune\" or realmName == \"Area 52\" or realmName == \"Bronzebeard\" or realmName == \"Rexxar\" or realmName == \"Grizzly Hills\") then return end\n---@class AscensionZoneTables\nAscensionZoneTables = AscensionZoneTables or {}",
+     "new": "local realmName = GetRealmName() or \"\"; if not ((_G.IsAscensionServer or _G.C_CharacterAdvancement) or realmName == \"Elune\" or realmName == \"Area 52\" or realmName == \"Bronzebeard\" or realmName == \"Rexxar\" or realmName == \"Grizzly Hills\") then return end\n---@class AscensionZoneTables\nAscensionZoneTables = AscensionZoneTables or {}"
+    }
+   ],
+   "Questie-X-AscensionDB.toc": [
+    {
+     "old": "Zones\\AscensionZoneTables.lua\nZones\\AscensionUiMapData.lua\nBronzebeard\\Split\\AscensionQuestDB_questData_1.lua\nBronzebeard\\Split\\AscensionNpcDB_npcData_1.lua",
+     "new": "Zones\\AscensionZoneTables.lua\nZones\\AscensionUiMapData.lua\nZones\\CoAExtraZones.lua\nBronzebeard\\Split\\AscensionQuestDB_questData_1.lua\nBronzebeard\\Split\\AscensionNpcDB_npcData_1.lua"
+    }
+   ]
+  },
+  "copy": [
+   "Zones/CoAExtraZones.lua"
+  ]
  }
 }

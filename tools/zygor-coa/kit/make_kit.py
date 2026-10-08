@@ -53,6 +53,25 @@ TARGETS = {
         'edit': ['Util.lua'],
         'copy': [],
     },
+    'questie': {
+        'patched': os.path.join(ADDONS, 'Questie-X'),
+        # Questie-X (and its Ascension plugin) recognise Ascension only by realm name; the CoA realms
+        # are named freely, so the Ascension client API counts too. Originals were backed up first.
+        'pristine': {rel: os.path.join(ADDONS, 'Questie-X', '_CoA_original', rel)
+                     for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua')},
+        'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua'],
+        'copy': [],
+    },
+    'questiedb': {
+        'patched': os.path.join(ADDONS, 'Questie-X-AscensionDB'),
+        'pristine': {rel: os.path.join(ADDONS, 'Questie-X-AscensionDB', '_CoA_original', rel)
+                     for rel in ('AscensionLoader.lua', 'Zones/AscensionUiMapData.lua',
+                                 'Zones/AscensionZoneTables.lua', 'Questie-X-AscensionDB.toc')},
+        'edit': ['AscensionLoader.lua', 'Zones/AscensionUiMapData.lua', 'Zones/AscensionZoneTables.lua',
+                 'Questie-X-AscensionDB.toc'],
+        # map sizes for 26 CoA open-world sub-maps, from tools\questie-x\gen_coa_maps.py
+        'copy': ['Zones/CoAExtraZones.lua'],
+    },
 }
 CONTEXT = 2  # unchanged lines kept on each side of a change, so each hunk is found in one place
 
