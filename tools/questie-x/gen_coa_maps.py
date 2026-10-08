@@ -12,11 +12,12 @@ zone's pins onto a small map.
 """
 import glob, os, re, struct, sys
 
-sys.path.insert(0, r"C:\Users\dotyt\tools\zygor-coa")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mpq import MPQ
 
-DATA = r"D:\COA Client\Data"
-ADDONS = r"D:\COA Client\Interface\AddOns"
+CLIENT = os.environ.get("COA_CLIENT", r"D:\COA Client")  # set COA_CLIENT to your client folder
+DATA = os.path.join(CLIENT, "Data")
+ADDONS = os.path.join(CLIENT, "Interface", "AddOns")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "CoAExtraZones.lua")
 
 

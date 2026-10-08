@@ -34,6 +34,10 @@ call :pub coa-zygor ZygorGuidesViewerRM
 call :pub coa-tomtom TomTom
 call :pub coa-healbot HealBot
 call :pub coa-buttonforge ButtonForge
+rem coa-questie holds four addon folders plus the public tools
+for %%Q in (Questie-X Questie-X-WotLKDB Questie-X-AscensionDB Questie-X-CoADB) do call :pub coa-questie %%Q
+if exist "%PUB%coa-questie\.git" robocopy "%TOOLS%\questie-x" "%PUB%coa-questie\tools" %RC% /XD src zips __pycache__ Questie-X-CoADB /XF README.md CoAExtraZones.lua *.json.gz stock_index.tsv dump_err.txt *.pyc
+if %ERRORLEVEL% GEQ 8 set "SYNCERR=1"
 
 rem robocopy exit codes below 8 mean success
 if %SYNCERR%==1 (echo Sync reported an error - check the output above.) else (echo Done. Review and commit the changes in GitHub Desktop, in each repository that shows changes.)

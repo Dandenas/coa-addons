@@ -69,6 +69,42 @@ do
 	assert(addonTable.uiMapIdToAreaId == nil and addonTable.zoneSort == nil, "no sub-zone folding is handed over")
 end
 
+-- Modules/FramePool/QuestieFramePool.lua: a recycled pin frame must get its global name back. The unload
+-- functions clear _G[name], and Questie finds a quest's pins through _G[name]; without the global a reused
+-- frame could never be unloaded, so finished objectives and turned-in '?' markers stayed until /reload.
+do
+	local env = Env("Nozdormu", true)
+	local modules = {}
+	local function module(name)
+		modules[name] = modules[name] or (name == "l10n" and setmetatable({}, { __call = function(_, s) return s end }) or {})
+		return modules[name]
+	end
+	env.QuestieLoader = { CreateModule = function(_, n) return module(n) end, ImportModule = function(_, n) return module(n) end }
+	env.QuestieCompat = { C_Timer = {}, WorldMapFrame = {}, HBDPins = {} }
+	env.CreateFrame = function() return {} end
+	env.Minimap = {}
+	env.StaticPopupDialogs = {}
+	env.tinsert, env.tremove = table.insert, table.remove
+	Load(core .. "Modules/FramePool/QuestieFramePool.lua", env)
+	local pool = modules.QuestieFramePool
+	local count = 0
+	pool.Qframe = { New = function(_, id)
+		count = count + 1
+		local name = "QuestieFrame" .. id
+		local frame = { frameId = id, GetName = function() return name end, SetScript = function() end }
+		env[name] = frame  -- CreateFrame with a name sets the global
+		return frame
+	end }
+	local frame = pool:GetFrame()
+	local name = frame:GetName()
+	assert(env[name] == frame, "a new pin frame has its global")
+	env[name] = nil              -- what UnloadQuestFramesForObjective / ByDataType / by icon type do
+	pool:RecycleFrame(frame)
+	local again = pool:GetFrame()
+	assert(again == frame and count == 1, "the pool reuses the frame")
+	assert(env[name] == frame, "a recycled pin frame gets its global name back (stale map pins otherwise)")
+end
+
 -- AscensionLoader.lua: registers the plugin at PLAYER_LOGIN only on Ascension.
 local function Registers(realm, ascensionClient)
 	local env = Env(realm, ascensionClient)
@@ -89,4 +125,4 @@ end
 assert(Registers("Nozdormu", true) == "Ascension", "the Ascension plugin registers on CoA")
 assert(Registers("Nozdormu", false) == nil, "the Ascension plugin stays off on a stock client")
 
-print("Questie-X CoA detection regression passed")
+print("Questie-X CoA regression passed (detection, maps, pin recycling)")

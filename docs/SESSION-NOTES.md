@@ -1,6 +1,6 @@
 # Session notes: CoA client and addon work
 
-Resume notes for Claude sessions. Last updated **2026-10-05** (official DLL installed).
+Resume notes for Claude sessions. Last updated **2026-10-08** (Questie-X on CoA; progression V1 pending).
 
 **To resume in a new session:**
 > Read `C:\Users\dotyt\Documents\GitHub\coa-addons\docs\SESSION-NOTES.md` and the memory index.
@@ -31,6 +31,8 @@ The memory folder (`C:\Users\dotyt\.claude\projects\C--Users-dotyt-Desktop-Strea
 | dbc_clientset | Item / ItemDisplayInfo / CreatureDisplayInfo.dbc from patch-M, in `C:\Users\dotyt\tools\dbc_clientset\`, copied to the server |
 | Realm cards, spec slots | Realm cards per realm. Spec slots and Tomes II–XX work since server #6244/#6297 |
 | Client update 2026-10-04 | Launcher release **2026-10-03-01** installed and compared (see "Client update" below) |
+| Zygor taint fix (10/06) | `ZygorTalentAdvisorCOA\Load.lua` no longer re-assigns `StaticPopupDialogs`; that had blocked bind-on-use confirmations (Stones of Retreat). In coa-addons and coa-zygor. `Sync-ToRepo.bat` now refuses to run outside the repo root |
+| Questie-X on CoA (10/08) | Detection patch (realm name → Ascension client API), map sizes for 26 CoA sub-maps (`CoAExtraZones.lua`), and **Questie-X-CoADB**, generated from the server's world DB (325 new + 499 changed quests). Confirmed in game. Tools and rebuild steps: `C:\Users\dotyt\tools\questie-x\README.md`. Kit targets `questie` / `questiedb`; suite is 29 tests |
 
 ## Client update (2026-10-04)
 
@@ -60,6 +62,12 @@ The memory folder (`C:\Users\dotyt\.claude\projects\C--Users-dotyt-Desktop-Strea
 - **Server update 10/04:** the server session checked the incoming commits (b392d4a5, e7c0ccab, 4c71515a, af8f4650): **no wire change, and nothing needs a DLL newer than 5197e75.** Item rows now also arrive after login, on demand.
 
 ## Waiting on the user
+
+0. **Current (10/08):**
+   - **Progression V1 on Nozdormu:** give the go after the 10/08 04:30 update verifies (raid gate #6771). Plan and reviewed script: `docs\PROGRESSION-PLAN.md`. V1 also sets the realm card to expansion 0, which replaces item 2 below for Nozdormu.
+   - **Sync and commit** the Questie-X work (`Sync-ToRepo.bat`, then GitHub Desktop).
+   - **A separate public repo for Questie-X on CoA:** requested 10/08.
+   - **Mystic Enchants:** the server doesn't handle CMSG 0x60A (apply item to slot) or 0x60E (reforge slot). The server session offered to draft an upstream issue; the user hasn't decided.
 
 1. **First play after the 10/04 client update.** Wait for the server session's "live and stable" message and copy `dbc_clientset.zip` to the server first. Then check:
    - items seen for the first time this session show an icon and name, not a red "?" (re-hover once);

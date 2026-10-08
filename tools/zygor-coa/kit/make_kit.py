@@ -57,9 +57,12 @@ TARGETS = {
         'patched': os.path.join(ADDONS, 'Questie-X'),
         # Questie-X (and its Ascension plugin) recognise Ascension only by realm name; the CoA realms
         # are named freely, so the Ascension client API counts too. Originals were backed up first.
+        # Plus an upstream bug: recycled map pin frames lost their global name, so completed objective /
+        # turn-in pins stayed on the map until /reload (QuestieFramePool.lua).
         'pristine': {rel: os.path.join(ADDONS, 'Questie-X', '_CoA_original', rel)
-                     for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua')},
-        'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua'],
+                     for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua',
+                                 'Modules/FramePool/QuestieFramePool.lua')},
+        'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua', 'Modules/FramePool/QuestieFramePool.lua'],
         'copy': [],
     },
     'questiedb': {

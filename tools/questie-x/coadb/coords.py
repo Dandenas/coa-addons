@@ -5,10 +5,10 @@ several zone rectangles (they overlap at borders); the zone where it is furthest
 """
 import glob, os, struct, sys
 
-sys.path.insert(0, r"C:\Users\dotyt\tools\zygor-coa")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from mpq import MPQ
 
-DATA = r"D:\COA Client\Data"
+DATA = os.path.join(os.environ.get("COA_CLIENT", r"D:\COA Client"), "Data")  # set COA_CLIENT to your client folder
 
 
 def read_dbc(name):
