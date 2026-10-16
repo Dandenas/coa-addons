@@ -20,7 +20,9 @@ TARGETS = {
         'edit': ['files.xml', 'Goal.lua', 'Item-ItemScore.lua', 'Libs/Astrolabe/Astrolabe.lua',
                  'Libs/Astrolabe/Load.xml', 'Libs/LibRover-1.0/LibRover-1.0.lua', 'MapCoords.lua',
                  'MapSpotSet.lua', 'Parser.lua', 'Pointer.lua', 'Waypoints.lua',
-                 'Options.lua', 'GuideBrowser.lua'],
+                 'Options.lua', 'GuideBrowser.lua',
+                 # the gear popup holds a secure button, so hiding it in combat was blocked
+                 'Item-Upgrades.lua'],
         'copy': ['CoAZones.lua', 'Data-WOTLK/CoA-ClassSpecs.lua', 'Libs/Astrolabe/AstrolabeCoAData.lua',
                  'ZygorTalentAdvisorCOA/files.xml', 'ZygorTalentAdvisorCOA/Data.lua',
                  'ZygorTalentAdvisorCOA/ZygorTalentAdvisorCOA.lua', 'ZygorTalentAdvisorCOA/Popout.lua',

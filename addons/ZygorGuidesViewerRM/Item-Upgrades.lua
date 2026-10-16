@@ -1166,7 +1166,7 @@ function Upgrades:ScanBagsForUpgrades(onlyscan)
 	Upgrades.BoeConfirmScanTimer = nil
 
 	-- clear any related popups
-	if Upgrades.EquipPopup then Upgrades.EquipPopup:Hide() end
+	Upgrades:HideEquipPopup()
 
 	-- clear upgrade queue
 	for i,v in pairs(Upgrades.UpgradeQueue) do table.wipe(v) end
@@ -1706,7 +1706,7 @@ function Upgrades:CreatePopup()
 	F.secureacceptbutton:SetScript("PostClick", function(self)
 		F.selfHidden = true
 		ZGV.NotificationCenter:RemoveEntry("ZygorItemPopup")
-		F:Hide()
+		Upgrades:HideEquipPopup()
 		local bindState = F.n_item and get_item_bind_state(F.n_item.itemlinkfull or F.n_item.itemlink, F.n_item.bagnum, F.n_item.bagslot)
 		if F.n_item and F.n_item.itemlink then
 			Upgrades.EquipFailureCooldown[cooldown_key(F.n_item.itemlink)] = GetTime() + 8
@@ -2202,12 +2202,12 @@ function Upgrades:CreatePopup()
 		if ZGV:IsPlayerInCombat() then
 			F.selfHidden = true
 			ZGV.NotificationCenter:RemoveEntry("ZygorItemPopup")
-			F:Hide()
+			Upgrades:HideEquipPopup()
 			return
 		end
 		F.selfHidden = true
 		ZGV.NotificationCenter:RemoveEntry("ZygorItemPopup")
-		F:Hide()
+		Upgrades:HideEquipPopup()
 		if F.n_item then
 			Upgrades:Equip(F.n_item)
 		end
@@ -2225,6 +2225,11 @@ function Upgrades:CreatePopup()
 		:SetParent(F.footer)
 		:ClearAllPoints()
 		:SetPoint("CENTER",F.footer,"CENTER",66,-1)
+	-- CoA fix: the generic popup's decline handler hides it directly, which is blocked in combat
+	F.declinebutton:SetScript("OnClick", function()
+		if F.OnDecline then F:OnDecline() end
+		Upgrades:HideEquipPopup()
+	end)
 
 	-- dump info about items in popup
 	function F.debug()
@@ -2341,6 +2346,20 @@ function Upgrades:ShowGearReport()
 	end
 
 	ZGV:ShowDump(out,"Autoequip report")
+end
+
+-- CoA fix: the popup's secure Equip button makes the whole popup a protected frame, so hiding it in combat
+-- was blocked ("prevented the call of the secure function 'ZygorItemPopup:Hide()'"). In combat the popup
+-- now stays up and is hidden when combat ends (PLAYER_REGEN_ENABLED in Item-ItemScore.lua).
+function Upgrades:HideEquipPopup()
+	local F = Upgrades.EquipPopup
+	if not F then return end
+	if InCombatLockdown() then
+		F.hideAfterCombat = true
+		return
+	end
+	F.hideAfterCombat = nil
+	F:Hide()
 end
 
 function Upgrades:ShowEquipmentChangePopup(slot)
@@ -2577,7 +2596,7 @@ end
 function Upgrades:Equip(item,retry)
 	if not item then return end
 	if ZGV:IsPlayerInCombat() then
-		if Upgrades.EquipPopup then Upgrades.EquipPopup:Hide() end
+		Upgrades:HideEquipPopup()
 		if ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry("ZygorItemPopup") end
 		return false
 	end

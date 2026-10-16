@@ -108,6 +108,7 @@ def run_tests(zygor_root, tomtom_root, healbot_root=None, buttonforge_root=None,
         for fx in fixtures:
             tests.append([LUA, 'test_astrolabe_coa_maps.lua', zygor_root, fx])
         tests.append([LUA, 'test_coa_class_gear.lua', zygor_root])
+        tests.append([LUA, 'test_zygor_gear_coa.lua', zygor_root])
         tests.append([LUA, 'test_coa_zones.lua', zygor_root] + fixtures)
         tests.append([LUA, 'test_ztacoa.lua', zygor_root])
         if os.path.isdir(UPSTREAM_TESTS):

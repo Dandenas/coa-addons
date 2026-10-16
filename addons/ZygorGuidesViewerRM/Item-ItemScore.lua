@@ -529,6 +529,9 @@ end
 
 local function should_warn_missing_itemdb(itemLinkOrID, itemID)
 	if not itemID then return false end
+	-- CoA fix: ZygorItemDB is a stock AzerothCore export. Ascension/CoA clients have hundreds of thousands of
+	-- custom items outside it, and their live stats (read from the tooltip) are used anyway, so don't warn there.
+	if _G.C_CharacterAdvancement then return false end
 	itemID = tonumber(itemID)
 	if not itemID or itemID > MISSING_ITEMDB_WARN_MAX_ID then
 		return false
@@ -2358,9 +2361,12 @@ function ItemScore:OnEvent(event,arg1,arg2,...)
 		-- on timer to run it only once, since equip/unequip fires both events, and we would get spammed
 		ItemScore:ScheduleEquipRescore(0.5)
 	elseif event == "PLAYER_REGEN_DISABLED" then -- combat started, kill all upgrade popups
-		if ItemScore.Upgrades.EquipPopup then ItemScore.Upgrades.EquipPopup:Hide() end
+		ItemScore.Upgrades:HideEquipPopup()
 		if ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry("ZygorItemPopup") end
 	elseif event == "PLAYER_REGEN_ENABLED" then -- combat ended, check if anything is waiting for equip
+		-- CoA fix: a popup hide that was blocked during combat happens now
+		local popup = ItemScore.Upgrades.EquipPopup
+		if popup and popup.hideAfterCombat then ItemScore.Upgrades:HideEquipPopup() end
 		ItemScore.Upgrades:ProcessPossibleUpgrades()
 	elseif event == "START_LOOT_ROLL" then
 		ItemScore:QueueLootRollMarker(arg1)

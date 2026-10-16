@@ -23,6 +23,10 @@
    ],
    "Item-ItemScore.lua": [
     {
+     "old": "local function should_warn_missing_itemdb(itemLinkOrID, itemID)\n\tif not itemID then return false end\n\titemID = tonumber(itemID)\n\tif not itemID or itemID > MISSING_ITEMDB_WARN_MAX_ID then",
+     "new": "local function should_warn_missing_itemdb(itemLinkOrID, itemID)\n\tif not itemID then return false end\n\t-- CoA fix: ZygorItemDB is a stock AzerothCore export. Ascension/CoA clients have hundreds of thousands of\n\t-- custom items outside it, and their live stats (read from the tooltip) are used anyway, so don't warn there.\n\tif _G.C_CharacterAdvancement then return false end\n\titemID = tonumber(itemID)\n\tif not itemID or itemID > MISSING_ITEMDB_WARN_MAX_ID then"
+    },
+    {
      "old": "local function class_can_use_standard_family(classToken, family, level)\n\tif not classToken or not family then return nil end\n\tif STANDARD_WEAPON_FAMILIES[family] then\n\t\tlocal classFamilies = CLASS_WEAPON_FAMILIES[classToken]",
      "new": "local function class_can_use_standard_family(classToken, family, level)\n\tif not classToken or not family then return nil end\n\t-- Classes this table does not know (server-custom classes such as Conquest of\n\t-- Azeroth's) answer from the character's own armor/weapon skills. Families that\n\t-- are not a skill (relics, jewelry...) and an unread skill list stay undecided.\n\tif not CLASS_MAX_ARMOR_FAMILY[classToken] and not CLASS_WEAPON_FAMILIES[classToken] then\n\t\tlocal skills = ItemScore.Skills\n\t\tif not (skills and next(skills)) or not (ItemScore.SkillNames and ItemScore.SkillNames[family]) then return nil end\n\t\treturn skills[family] ~= nil\n\tend\n\tif STANDARD_WEAPON_FAMILIES[family] then\n\t\tlocal classFamilies = CLASS_WEAPON_FAMILIES[classToken]"
     },
@@ -45,6 +49,10 @@
     {
      "old": "\tif role == \"healer\" or role == \"support\" or role == \"sup\" then role = \"heal\" end\n\tlocal classToken = self.playerclass or select(2, UnitClass(\"player\"))\n\tlocal state = self:GetTalentState(classToken, self.playerlevel or UnitLevel(\"player\"))\n\tlocal tree = tonumber(state and state.bestTree)",
      "new": "\tif role == \"healer\" or role == \"support\" or role == \"sup\" then role = \"heal\" end\n\tlocal classToken = self.playerclass or select(2, UnitClass(\"player\"))\n\tif classToken == \"CUSTOM\" and self.CoAClass then\n\t\tlocal build = self:GetCoARoleBuild(role)\n\t\tif build then return build end\n\t\treturn nil, (\"No %s spec is available for %s.\"):format(role, tostring(self.CoAClass.name))\n\tend\n\tlocal state = self:GetTalentState(classToken, self.playerlevel or UnitLevel(\"player\"))\n\tlocal tree = tonumber(state and state.bestTree)"
+    },
+    {
+     "old": "\t\tItemScore:ScheduleEquipRescore(0.5)\n\telseif event == \"PLAYER_REGEN_DISABLED\" then -- combat started, kill all upgrade popups\n\t\tif ItemScore.Upgrades.EquipPopup then ItemScore.Upgrades.EquipPopup:Hide() end\n\t\tif ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\") end\n\telseif event == \"PLAYER_REGEN_ENABLED\" then -- combat ended, check if anything is waiting for equip\n\t\tItemScore.Upgrades:ProcessPossibleUpgrades()\n\telseif event == \"START_LOOT_ROLL\" then",
+     "new": "\t\tItemScore:ScheduleEquipRescore(0.5)\n\telseif event == \"PLAYER_REGEN_DISABLED\" then -- combat started, kill all upgrade popups\n\t\tItemScore.Upgrades:HideEquipPopup()\n\t\tif ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\") end\n\telseif event == \"PLAYER_REGEN_ENABLED\" then -- combat ended, check if anything is waiting for equip\n\t\t-- CoA fix: a popup hide that was blocked during combat happens now\n\t\tlocal popup = ItemScore.Upgrades.EquipPopup\n\t\tif popup and popup.hideAfterCombat then ItemScore.Upgrades:HideEquipPopup() end\n\t\tItemScore.Upgrades:ProcessPossibleUpgrades()\n\telseif event == \"START_LOOT_ROLL\" then"
     },
     {
      "old": "\t\tself.unknownServerClassToken = originalClassToken\n\t\tself.unknownServerClassName = originalClassName\n\t\tself.playerclass = self:GetCustomClassToken()\n\t\tself.playerclassName = \"Custom\"\n\tend\n\tself.playerclassNum = (self.playerclass and ZGV.ClassToNumber and ZGV.ClassToNumber[self.playerclass]) or self:GetCustomClassID()",
@@ -157,6 +165,32 @@
     {
      "old": "\t[\"ZygorGuidesViewer-Gear\"] = \"gear\",\n\t[\"ZygorGuidesViewer-ItemScore\"] = \"itemscore\",\n}\n",
      "new": "\t[\"ZygorGuidesViewer-Gear\"] = \"gear\",\n\t[\"ZygorGuidesViewer-ItemScore\"] = \"itemscore\",\n\t[\"ZygorGuidesViewer-TalentAdvisorCOA\"] = \"zta\",\n}\n"
+    }
+   ],
+   "Item-Upgrades.lua": [
+    {
+     "old": "\n\t-- clear any related popups\n\tif Upgrades.EquipPopup then Upgrades.EquipPopup:Hide() end\n\n\t-- clear upgrade queue",
+     "new": "\n\t-- clear any related popups\n\tUpgrades:HideEquipPopup()\n\n\t-- clear upgrade queue"
+    },
+    {
+     "old": "\t\tF.selfHidden = true\n\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\tF:Hide()\n\t\tlocal bindState = F.n_item and get_item_bind_state(F.n_item.itemlinkfull or F.n_item.itemlink, F.n_item.bagnum, F.n_item.bagslot)\n\t\tif F.n_item and F.n_item.itemlink then",
+     "new": "\t\tF.selfHidden = true\n\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\tUpgrades:HideEquipPopup()\n\t\tlocal bindState = F.n_item and get_item_bind_state(F.n_item.itemlinkfull or F.n_item.itemlink, F.n_item.bagnum, F.n_item.bagslot)\n\t\tif F.n_item and F.n_item.itemlink then"
+    },
+    {
+     "old": "\t\t\tF.selfHidden = true\n\t\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\t\tF:Hide()\n\t\t\treturn\n\t\tend\n\t\tF.selfHidden = true\n\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\tF:Hide()\n\t\tif F.n_item then\n\t\t\tUpgrades:Equip(F.n_item)",
+     "new": "\t\t\tF.selfHidden = true\n\t\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\t\tUpgrades:HideEquipPopup()\n\t\t\treturn\n\t\tend\n\t\tF.selfHidden = true\n\t\tZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\")\n\t\tUpgrades:HideEquipPopup()\n\t\tif F.n_item then\n\t\t\tUpgrades:Equip(F.n_item)"
+    },
+    {
+     "old": "\t\t:ClearAllPoints()\n\t\t:SetPoint(\"CENTER\",F.footer,\"CENTER\",66,-1)\n\n\t-- dump info about items in popup",
+     "new": "\t\t:ClearAllPoints()\n\t\t:SetPoint(\"CENTER\",F.footer,\"CENTER\",66,-1)\n\t-- CoA fix: the generic popup's decline handler hides it directly, which is blocked in combat\n\tF.declinebutton:SetScript(\"OnClick\", function()\n\t\tif F.OnDecline then F:OnDecline() end\n\t\tUpgrades:HideEquipPopup()\n\tend)\n\n\t-- dump info about items in popup"
+    },
+    {
+     "old": "\n\tZGV:ShowDump(out,\"Autoequip report\")\nend\n",
+     "new": "\n\tZGV:ShowDump(out,\"Autoequip report\")\nend\n\n-- CoA fix: the popup's secure Equip button makes the whole popup a protected frame, so hiding it in combat\n-- was blocked (\"prevented the call of the secure function 'ZygorItemPopup:Hide()'\"). In combat the popup\n-- now stays up and is hidden when combat ends (PLAYER_REGEN_ENABLED in Item-ItemScore.lua).\nfunction Upgrades:HideEquipPopup()\n\tlocal F = Upgrades.EquipPopup\n\tif not F then return end\n\tif InCombatLockdown() then\n\t\tF.hideAfterCombat = true\n\t\treturn\n\tend\n\tF.hideAfterCombat = nil\n\tF:Hide()\nend\n"
+    },
+    {
+     "old": "\tif not item then return end\n\tif ZGV:IsPlayerInCombat() then\n\t\tif Upgrades.EquipPopup then Upgrades.EquipPopup:Hide() end\n\t\tif ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\") end\n\t\treturn false",
+     "new": "\tif not item then return end\n\tif ZGV:IsPlayerInCombat() then\n\t\tUpgrades:HideEquipPopup()\n\t\tif ZGV.NotificationCenter then ZGV.NotificationCenter:RemoveEntry(\"ZygorItemPopup\") end\n\t\treturn false"
     }
    ]
   },
