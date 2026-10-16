@@ -3770,6 +3770,20 @@ local function ResolveTurnedInQuestId(rawQuestId)
     return nil
 end
 
+-- CoA fix: a kill-credit objective's IdList can hold nested id lists (and its Id then is a table too), so
+-- comparing an entry with 0 failed with "attempt to compare number with table". Flatten to positive numbers.
+local function _PositiveNumericIds(list, out, depth)
+    out, depth = out or {}, depth or 0
+    for _, id in ipairs(list) do
+        if type(id) == "number" then
+            if id > 0 then out[#out + 1] = id end
+        elseif type(id) == "table" and depth < 2 then
+            _PositiveNumericIds(id, out, depth + 1)
+        end
+    end
+    return out
+end
+
 -- Fires when a quest is accepted.
 function QuestieLearner:OnQuestAccepted(firstArg, secondArg)
     Questie:Debug(Questie.DEBUG_INFO, "[QuestieLearner] OnQuestAccepted raw args: first=" .. tostring(firstArg) .. " second=" .. tostring(secondArg))
@@ -3848,10 +3862,7 @@ function QuestieLearner:OnQuestAccepted(firstArg, secondArg)
                         local quest = QuestieDB and QuestieDB.GetQuest and QuestieDB.GetQuest(questId)
                         if quest and quest.ObjectiveData and quest.ObjectiveData[j] then
                             local objData = quest.ObjectiveData[j]
-                            local candidateIds = objData.IdList
-                            if not candidateIds and objData.Id and objData.Id > 0 then
-                                candidateIds = { objData.Id }
-                            end
+                            local candidateIds = _PositiveNumericIds(objData.IdList or { objData.Id })
                             if candidateIds then
                                 for _, possibleId in ipairs(candidateIds) do
                                     if possibleId and possibleId > 0 then

@@ -58,11 +58,24 @@ TARGETS = {
         # Questie-X (and its Ascension plugin) recognise Ascension only by realm name; the CoA realms
         # are named freely, so the Ascension client API counts too. Originals were backed up first.
         # Plus an upstream bug: recycled map pin frames lost their global name, so completed objective /
-        # turn-in pins stayed on the map until /reload (QuestieFramePool.lua).
+        # turn-in pins stayed on the map until /reload (QuestieFramePool.lua). And another: plugin-supplied
+        # base tables were flagged "missing", forcing Runtime mode: Learner for everyone (QuestieInit.lua).
+        # Turn-ins resolved by title could pick a same-named follow-up (Compat.lua), and the tracker kept an
+        # old quest copy after Questie's cache rebuilt it, freezing its counts until /reload (QuestieQuest.lua).
+        # QueryNPC was a table while the DB handles were built, so a lookup at login errored (QuestieDB.lua), and
+        # nested kill-credit id lists were compared with 0 (QuestieLearner.lua, QuestieQuestPrivates.lua).
+        # The arrow re-converted and sorted every objective spawn each second, a stutter on big objectives
+        # (QuestieArrow.lua), and the player position was re-read 20 times a second (HBD.lua).
         'pristine': {rel: os.path.join(ADDONS, 'Questie-X', '_CoA_original', rel)
                      for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua',
-                                 'Modules/FramePool/QuestieFramePool.lua')},
-        'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua', 'Modules/FramePool/QuestieFramePool.lua'],
+                                 'Modules/FramePool/QuestieFramePool.lua', 'Modules/QuestieInit.lua',
+                                 'Modules/Quest/QuestieQuest.lua', 'Database/QuestieDB.lua',
+                                 'Modules/QuestieLearner.lua', 'Modules/Quest/QuestieQuestPrivates.lua',
+                                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua')},
+        'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua', 'Modules/FramePool/QuestieFramePool.lua',
+                 'Modules/QuestieInit.lua', 'Modules/Quest/QuestieQuest.lua', 'Database/QuestieDB.lua',
+                 'Modules/QuestieLearner.lua', 'Modules/Quest/QuestieQuestPrivates.lua',
+                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua'],
         'copy': [],
     },
     'questiedb': {

@@ -287,12 +287,106 @@
     {
      "old": "    -- keep objective pins stuck in the wrong place. Prefer the real Sunstrider\n    -- child map when we know the player is on that realm/zone.\n    if _G.IsAscensionServer and (GetRealZoneText and GetRealZoneText() == \"Sunstrider Isle\") then\n        return 1241\n    end",
      "new": "    -- keep objective pins stuck in the wrong place. Prefer the real Sunstrider\n    -- child map when we know the player is on that realm/zone.\n    if (_G.IsAscensionServer or _G.C_CharacterAdvancement) and (GetRealZoneText and GetRealZoneText() == \"Sunstrider Isle\") then\n        return 1241\n    end"
+    },
+    {
+     "old": "local completeQuestCache = {}\n\nlocal DAILY_QUESTS_MSG = string.gsub(DAILY_QUESTS_REMAINING, \"%%d\", \"(%%d+)\"):gsub(\"|4(.-)$\", \"\")\n",
+     "new": "local completeQuestCache = {}\n\n-- CoA fix: a quest being turned in is complete in the log. Matching by title alone picked up a same-named\n-- follow-up that was already in the log (e.g. \"The People's Militia\" 12 -> 13 -> 14), marked IT as turned in,\n-- and its objectives then never updated until /reload. Only accept a complete entry with that title.\nfunction QuestieCompat.GetCompletedQuestIDFromName(questTitle)\n    local numEntries = select(1, GetNumQuestLogEntries()) or 0\n    for questLogIndex = 1, numEntries do\n        local title, _, _, isHeader, _, isComplete, _, id = QuestieCompat.GetQuestLogTitle(questLogIndex)\n        if title and (not isHeader) and id and id > 0 and title == questTitle and isComplete == 1 then\n            return id\n        end\n    end\nend\n\nlocal DAILY_QUESTS_MSG = string.gsub(DAILY_QUESTS_REMAINING, \"%%d\", \"(%%d+)\"):gsub(\"|4(.-)$\", \"\")\n"
+    },
+    {
+     "old": "    local questName = string.match(message, QUEST_COMPLETE_MSG)\n    if questName then\n        local questId = completeQuestCache[questName] or QuestieCompat.GetQuestIDFromName(questName)\n\n        if questId and questId > 0 then",
+     "new": "    local questName = string.match(message, QUEST_COMPLETE_MSG)\n    if questName then\n        local questId = completeQuestCache[questName] or QuestieCompat.GetCompletedQuestIDFromName(questName)\n\n        if questId and questId > 0 then"
+    },
+    {
+     "old": "        if InCombatLockdown() then return end\n        local questTitle = GetTitleText()\n        local questId = QuestieCompat.GetQuestIDFromName(questTitle)\n        if questId and questId > 0 then\n            completeQuestCache[questTitle] = questId",
+     "new": "        if InCombatLockdown() then return end\n        local questTitle = GetTitleText()\n        local questId = QuestieCompat.GetCompletedQuestIDFromName(questTitle)\n        if questId and questId > 0 then\n            completeQuestCache[questTitle] = questId"
     }
    ],
    "Modules/FramePool/QuestieFramePool.lua": [
     {
      "old": "        --Questie:Debug(Questie.DEBUG_SPAM, \"[QuestieFramePool:GetFrame] Reusing frame\")\n        unusedFrames[returnFrame.frameId] = nil\n    end\n    if returnFrame ~= nil and returnFrame.hidden and returnFrame._show ~= nil and returnFrame._hide ~= nil then -- restore state to normal (toggle questie)",
      "new": "        --Questie:Debug(Questie.DEBUG_SPAM, \"[QuestieFramePool:GetFrame] Reusing frame\")\n        unusedFrames[returnFrame.frameId] = nil\n        -- CoA fix: the unload functions clear _G[name] (#9), but GetFramesForQuest finds a quest's\n        -- pins through _G[name]. A recycled frame without its global could never be unloaded again,\n        -- so completed objectives / turned-in '?' markers stayed on the map until /reload.\n        local name = returnFrame:GetName()\n        if name then _G[name] = returnFrame end\n    end\n    if returnFrame ~= nil and returnFrame.hidden and returnFrame._show ~= nil and returnFrame._hide ~= nil then -- restore state to normal (toggle questie)"
+    }
+   ],
+   "Modules/QuestieInit.lua": [
+    {
+     "old": "    elseif type(QuestieDB[key]) == \"table\" then\n        Questie:Debug(Questie.DEBUG_DEVELOP, \"[LoadDatabase] '\" .. key .. \"' already a table (split-file format), skipping loadstring\")\n    else\n        Questie:Debug(Questie.DEBUG_DEVELOP, \"Database is missing, this is likely do to era vs tbc: \", key)",
+     "new": "    elseif type(QuestieDB[key]) == \"table\" then\n        Questie:Debug(Questie.DEBUG_DEVELOP, \"[LoadDatabase] '\" .. key .. \"' already a table (split-file format), skipping loadstring\")\n    elseif type(QuestieDB[key .. \"Overrides\"]) == \"table\" and next(QuestieDB[key .. \"Overrides\"]) then\n        -- CoA fix: with database plugins (Questie-X-WotLKDB etc.) the base tables stay empty and the data\n        -- arrives as <key>Overrides, injected before this runs (the load waits for pending plugins).\n        -- Flagging that as \"missing\" forced Runtime mode: Learner for everyone, so learned fallback\n        -- positions (the player's own position at quest NPCs) drew duplicate pins.\n        Questie:Debug(Questie.DEBUG_DEVELOP, \"[LoadDatabase] '\" .. key .. \"' supplied by a database plugin (overrides), not missing\")\n    else\n        Questie:Debug(Questie.DEBUG_DEVELOP, \"Database is missing, this is likely do to era vs tbc: \", key)"
+    }
+   ],
+   "Modules/Quest/QuestieQuest.lua": [
+    {
+     "old": "    local quest = QuestieDB.GetQuest(questId)\n\n    local sourceItemId = (quest and tonumber(quest.sourceItemId)) or 0\n",
+     "new": "    local quest = QuestieDB.GetQuest(questId)\n\n    -- CoA fix: when Questie's quest cache is rebuilt mid-session, GetQuest hands out a NEW quest object\n    -- while the tracker keeps the one stored at accept/login. Updates went to the new copy and the\n    -- tracker stayed at e.g. 0/15 until /reload. Re-link the tracker to the current copy; the old\n    -- copy's map pins are removed first, so the redraw below doesn't leave duplicates behind.\n    local tracked = QuestiePlayer.currentQuestlog[questId]\n    if quest and type(tracked) == \"table\" and tracked ~= quest then\n        quest.LocalizedName = quest.LocalizedName or tracked.LocalizedName\n        QuestieMap:UnloadQuestFrames(questId)\n        QuestiePlayer.currentQuestlog[questId] = quest\n    end\n\n    local sourceItemId = (quest and tonumber(quest.sourceItemId)) or 0\n"
+    },
+    {
+     "old": "function QuestieQuest:SetObjectivesDirty(questId)\n    local quest = QuestieDB.GetQuest(questId)\n\n    if quest then",
+     "new": "function QuestieQuest:SetObjectivesDirty(questId)\n    local quest = QuestieDB.GetQuest(questId)\n\n    -- CoA fix: also dirty the tracker's copy if it is a different (older) object than GetQuest's,\n    -- in case anything reads it before UpdateQuest re-links it.\n    local tracked = QuestiePlayer.currentQuestlog[questId]\n    if type(tracked) == \"table\" and tracked ~= quest then\n        for _, objective in pairs(tracked.Objectives or {}) do objective.isUpdated = false end\n        for _, objective in pairs(tracked.SpecialObjectives or {}) do objective.isUpdated = false end\n    end\n\n    if quest then"
+    }
+   ],
+   "Database/QuestieDB.lua": [
+    {
+     "old": "    end\n\n    QuestieDB.QueryNPC = QuestieDBCompiler:GetDBHandle(npcBin, npcPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.npcCompilerTypes, QuestieDB.npcCompilerOrder), QuestieDB.npcKeys, QuestieDB.npcDataOverrides)\n    QuestieDB.QueryQuest = QuestieDBCompiler:GetDBHandle(questBin, questPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.questCompilerTypes, QuestieDB.questCompilerOrder), QuestieDB.questKeys, QuestieDB.questDataOverrides)\n    QuestieDB.QueryObject = QuestieDBCompiler:GetDBHandle(objBin, objPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.objectCompilerTypes, QuestieDB.objectCompilerOrder), QuestieDB.objectKeys, QuestieDB.objectDataOverrides)\n    QuestieDB.QueryItem = QuestieDBCompiler:GetDBHandle(itemBin, itemPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.itemCompilerTypes, QuestieDB.itemCompilerOrder), QuestieDB.itemKeys, QuestieDB.itemDataOverrides)\n\n    QuestieDB._QueryQuestSingle = QuestieDB.QueryQuest.QuerySingle\n    QuestieDB._QueryNPCSingle = QuestieDB.QueryNPC.QuerySingle\n    QuestieDB._QueryObjectSingle = QuestieDB.QueryObject.QuerySingle\n    QuestieDB._QueryItemSingle = QuestieDB.QueryItem.QuerySingle\n\n    QuestieDB.NPCPointers = QuestieDB.QueryNPC.pointers\n    QuestieDB.QuestPointers = QuestieDB.QueryQuest.pointers\n    QuestieDB.ObjectPointers = QuestieDB.QueryObject.pointers\n    QuestieDB.ItemPointers = QuestieDB.QueryItem.pointers\n\n    QuestieDB._QueryNPC = QuestieDB.QueryNPC.Query\n    QuestieDB._QueryQuest = QuestieDB.QueryQuest.Query\n    QuestieDB._QueryObject = QuestieDB.QueryObject.Query\n    QuestieDB._QueryItem = QuestieDB.QueryItem.Query\n\n    QuestieDB.QueryNPC = QuestieDB._QueryNPC",
+     "new": "    end\n\n    -- CoA fix: GetDBHandle yields, so build all four handles first. Assigning each handle (a table) to\n    -- QuestieDB.QueryNPC etc. right away left it a table while the next ones were built, and an NPC lookup\n    -- from an event in that window (e.g. the Learner's combat log) failed with \"attempt to call field\n    -- 'QueryNPC' (a table value)\". Until all are built the dummy Query functions above stay in place.\n    local npcHandle = QuestieDBCompiler:GetDBHandle(npcBin, npcPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.npcCompilerTypes, QuestieDB.npcCompilerOrder), QuestieDB.npcKeys, QuestieDB.npcDataOverrides)\n    local questHandle = QuestieDBCompiler:GetDBHandle(questBin, questPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.questCompilerTypes, QuestieDB.questCompilerOrder), QuestieDB.questKeys, QuestieDB.questDataOverrides)\n    local objectHandle = QuestieDBCompiler:GetDBHandle(objBin, objPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.objectCompilerTypes, QuestieDB.objectCompilerOrder), QuestieDB.objectKeys, QuestieDB.objectDataOverrides)\n    local itemHandle = QuestieDBCompiler:GetDBHandle(itemBin, itemPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.itemCompilerTypes, QuestieDB.itemCompilerOrder), QuestieDB.itemKeys, QuestieDB.itemDataOverrides)\n\n    QuestieDB._QueryQuestSingle = questHandle.QuerySingle\n    QuestieDB._QueryNPCSingle = npcHandle.QuerySingle\n    QuestieDB._QueryObjectSingle = objectHandle.QuerySingle\n    QuestieDB._QueryItemSingle = itemHandle.QuerySingle\n\n    QuestieDB.NPCPointers = npcHandle.pointers\n    QuestieDB.QuestPointers = questHandle.pointers\n    QuestieDB.ObjectPointers = objectHandle.pointers\n    QuestieDB.ItemPointers = itemHandle.pointers\n\n    QuestieDB._QueryNPC = npcHandle.Query\n    QuestieDB._QueryQuest = questHandle.Query\n    QuestieDB._QueryObject = objectHandle.Query\n    QuestieDB._QueryItem = itemHandle.Query\n\n    QuestieDB.QueryNPC = QuestieDB._QueryNPC"
+    }
+   ],
+   "Modules/QuestieLearner.lua": [
+    {
+     "old": "end\n\n-- Fires when a quest is accepted.\nfunction QuestieLearner:OnQuestAccepted(firstArg, secondArg)",
+     "new": "end\n\n-- CoA fix: a kill-credit objective's IdList can hold nested id lists (and its Id then is a table too), so\n-- comparing an entry with 0 failed with \"attempt to compare number with table\". Flatten to positive numbers.\nlocal function _PositiveNumericIds(list, out, depth)\n    out, depth = out or {}, depth or 0\n    for _, id in ipairs(list) do\n        if type(id) == \"number\" then\n            if id > 0 then out[#out + 1] = id end\n        elseif type(id) == \"table\" and depth < 2 then\n            _PositiveNumericIds(id, out, depth + 1)\n        end\n    end\n    return out\nend\n\n-- Fires when a quest is accepted.\nfunction QuestieLearner:OnQuestAccepted(firstArg, secondArg)"
+    },
+    {
+     "old": "                        if quest and quest.ObjectiveData and quest.ObjectiveData[j] then\n                            local objData = quest.ObjectiveData[j]\n                            local candidateIds = objData.IdList\n                            if not candidateIds and objData.Id and objData.Id > 0 then\n                                candidateIds = { objData.Id }\n                            end\n                            if candidateIds then\n                                for _, possibleId in ipairs(candidateIds) do",
+     "new": "                        if quest and quest.ObjectiveData and quest.ObjectiveData[j] then\n                            local objData = quest.ObjectiveData[j]\n                            local candidateIds = _PositiveNumericIds(objData.IdList or { objData.Id })\n                            if candidateIds then\n                                for _, possibleId in ipairs(candidateIds) do"
+    }
+   ],
+   "Modules/Quest/QuestieQuestPrivates.lua": [
+    {
+     "old": "        for npcIdIndex = 1, #objectiveData.IdList do\n            local killCreditNpcId = objectiveData.IdList[npcIdIndex]\n            if killCreditNpcId and killCreditNpcId > 0 then\n                local monsterResult = monster(killCreditNpcId, objective)\n                if monsterResult and monsterResult[killCreditNpcId] then",
+     "new": "        for npcIdIndex = 1, #objectiveData.IdList do\n            local killCreditNpcId = objectiveData.IdList[npcIdIndex]\n            -- CoA fix: some kill-credit IdLists hold nested lists; comparing those with 0 raised an error\n            if type(killCreditNpcId) == \"number\" and killCreditNpcId > 0 then\n                local monsterResult = monster(killCreditNpcId, objective)\n                if monsterResult and monsterResult[killCreditNpcId] then"
+    }
+   ],
+   "Modules/Arrow/QuestieArrow.lua": [
+    {
+     "old": "end\n\nlocal function _AddArrowTarget(x, y, uiMapId, title, questLevel, iconPath, worldX, worldY, worldInstance, distance)\n    table.insert(sortedTargets, {\n        x = x,\n        y = y,",
+     "new": "end\n\n-- CoA fix: the arrow re-scans every spawn of every tracked objective each second (and on tracker updates). It\n-- converted each spawn to world coordinates again and built a table per spawn, then sorted them all, while only\n-- the nearest target is used: ~34 ms per refresh with a dozen quests, a stutter plus constant garbage on\n-- objectives with hundreds of spawns. Spawn positions never move, so their world positions are remembered,\n-- and only the nearest few targets are kept, already in distance order.\nlocal MAX_ARROW_TARGETS = 3\nlocal _spawnWorldCache = setmetatable({}, { __mode = \"k\" })\n\nlocal function _SpawnWorldPosition(key, x, y, uiMapId)\n    local cached = _spawnWorldCache[key]\n    if cached and cached[4] == uiMapId and cached[5] == x and cached[6] == y then\n        return cached[1], cached[2], cached[3]\n    end\n    local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)\n    _spawnWorldCache[key] = { tX or false, tY or false, tInst or false, uiMapId, x, y }\n    return tX, tY, tInst\nend\n\nlocal function _AddArrowTarget(x, y, uiMapId, title, questLevel, iconPath, worldX, worldY, worldInstance, distance)\n    local count = #sortedTargets\n    if count >= MAX_ARROW_TARGETS and distance >= sortedTargets[count].distance then\n        return\n    end\n    local pos = count + 1\n    while pos > 1 and sortedTargets[pos - 1].distance > distance do\n        pos = pos - 1\n    end\n    table.insert(sortedTargets, pos, {\n        x = x,\n        y = y,"
+    },
+    {
+     "old": "        distance = distance,\n    })\nend\n",
+     "new": "        distance = distance,\n    })\n    if count + 1 > MAX_ARROW_TARGETS then\n        sortedTargets[count + 1] = nil\n    end\nend\n"
+    },
+    {
+     "old": "                                        local uiMapId = _GetUiMapIdForZone(zone)\n                                        if uiMapId and x and y then\n                                            local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)\n                                            if tX and tY and tInst then\n                                                local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)",
+     "new": "                                        local uiMapId = _GetUiMapIdForZone(zone)\n                                        if uiMapId and x and y then\n                                            local tX, tY, tInst = _SpawnWorldPosition(value, x, y, uiMapId)\n                                            if tX and tY and tInst then\n                                                local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)"
+    },
+    {
+     "old": "                                local uiMapId = _GetUiMapIdForZone(finisherZone)\n                                if uiMapId then\n                                    local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)\n                                    if tX and tY and tInst then\n                                        local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)",
+     "new": "                                local uiMapId = _GetUiMapIdForZone(finisherZone)\n                                if uiMapId then\n                                    local tX, tY, tInst = _SpawnWorldPosition(coords, x, y, uiMapId)\n                                    if tX and tY and tInst then\n                                        local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)"
+    },
+    {
+     "old": "                    local uiMapId = _GetUiMapIdForZone(zone)\n                    if uiMapId and x and y then\n                        local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)\n                        if tX and tY and tInst then\n                            local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)",
+     "new": "                    local uiMapId = _GetUiMapIdForZone(zone)\n                    if uiMapId and x and y then\n                        local tX, tY, tInst = _SpawnWorldPosition(waypoints[1][1], x, y, uiMapId)\n                        if tX and tY and tInst then\n                            local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)"
+    },
+    {
+     "old": "        end\n        if spawnData and spawnData.Spawns then\n            for zone, spawns in pairs(spawnData.Spawns) do\n                -- Zone filtering is disabled in auto mode because zone IDs and area IDs",
+     "new": "        end\n        if spawnData and spawnData.Spawns then\n            local iconPath = ResolveIconTexture(objective.Icon) or ResolveIconTexture(spawnData.Icon)\n            for zone, spawns in pairs(spawnData.Spawns) do\n                -- Zone filtering is disabled in auto mode because zone IDs and area IDs"
+    },
+    {
+     "old": "                        end\n                        if uiMapId then\n                            local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(spawn[1] / 100.0, spawn[2] / 100.0, uiMapId)\n                            if tX and tY and tInst then\n                                local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)",
+     "new": "                        end\n                        if uiMapId then\n                            local tX, tY, tInst = _SpawnWorldPosition(spawn, spawn[1], spawn[2], uiMapId)\n                            if tX and tY and tInst then\n                                local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)"
+    },
+    {
+     "old": "                                        quest.name,\n                                        quest.level,\n                                        ResolveIconTexture(objective.Icon) or ResolveIconTexture(spawnData and spawnData.Icon),\n                                        tX,\n                                        tY,",
+     "new": "                                        quest.name,\n                                        quest.level,\n                                        iconPath,\n                                        tX,\n                                        tY,"
+    },
+    {
+     "old": "    end\n\n    -- Sort by distance\n    table.sort(sortedTargets, _SortTargetByDistance)\nend\n",
+     "new": "    end\n\n    -- sortedTargets is kept in distance order by _AddArrowTarget (CoA fix)\nend\n"
+    }
+   ],
+   "Compat/HBD.lua": [
+    {
+     "old": "-- Position cache: avoid hammering the C API more than 20 times per second.\n-- These are invalidated on zone-change events below.\nlocal _pos_cache_interval = 0.05\nlocal _pzp_x, _pzp_y, _pzp_mapID, _pzp_time = nil, nil, nil, 0\nlocal _pwp_x, _pwp_y, _pwp_inst, _pwp_time = nil, nil, nil, 0",
+     "new": "-- Position cache: avoid hammering the C API more than 20 times per second.\n-- These are invalidated on zone-change events below.\n-- CoA fix: 0.1 (was 0.05). Each refresh calls SetMapToCurrentZone, which is slow and fires WORLD_MAP_UPDATE\n-- for every addon listening; the arrow needle polls every 0.05 s, so this halves those calls and still\n-- updates its direction 10 times a second.\nlocal _pos_cache_interval = 0.1\nlocal _pzp_x, _pzp_y, _pzp_mapID, _pzp_time = nil, nil, nil, 0\nlocal _pwp_x, _pwp_y, _pwp_inst, _pwp_time = nil, nil, nil, 0"
     }
    ]
   },

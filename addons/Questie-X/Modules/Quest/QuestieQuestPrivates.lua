@@ -96,7 +96,8 @@ killcredit = function(npcId, objective, objectiveData)
     if objectiveData.IdList then
         for npcIdIndex = 1, #objectiveData.IdList do
             local killCreditNpcId = objectiveData.IdList[npcIdIndex]
-            if killCreditNpcId and killCreditNpcId > 0 then
+            -- CoA fix: some kill-credit IdLists hold nested lists; comparing those with 0 raised an error
+            if type(killCreditNpcId) == "number" and killCreditNpcId > 0 then
                 local monsterResult = monster(killCreditNpcId, objective)
                 if monsterResult and monsterResult[killCreditNpcId] then
                     ret[killCreditNpcId] = monsterResult[killCreditNpcId]

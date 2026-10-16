@@ -3,22 +3,50 @@ local _, addonTable = ...
 addonTable.questData = addonTable.questData or {}
 local d = addonTable.questData
 d[1]={[1]="Kanrethad's Quest",[2]={[3]={810000,1007902,1014785,1021449,1028014,1034578,1041141,1047704,1054267,1060830,1067393}}}
+d[19]={[5]=-1}
+d[20]={[5]=-1}
 d[22]={[5]=-1}
+d[34]={[5]=-1}
 d[36]={[5]=-1}
 d[38]={[5]=-1}
 d[50]={[4]=35}
 d[64]={[5]=-1}
 d[65]={[5]=-1}
+d[89]={[4]=10,[5]=-1}
+d[91]={[5]=-1}
+d[92]={[4]=10,[5]=-1}
+d[94]={[5]=-1}
 d[100]={[2]={[1]={7007},[2]={113791}}}
 d[104]={[4]=10,[5]=15}
 d[109]={[2]={[1]={233,237,240,261,294,963}}}
+d[115]={[5]=-1}
+d[116]={[5]=-1}
+d[118]={[5]=-1}
+d[119]={[5]=-1}
+d[120]={[5]=-1}
+d[121]={[5]=-1}
+d[122]={[5]=-1}
+d[124]={[5]=-1}
+d[125]={[4]=10,[5]=11}
+d[126]={[4]=10,[5]=-1}
+d[127]={[5]=-1}
+d[128]={[5]=-1}
+d[129]={[5]=-1}
+d[130]={[5]=-1}
+d[131]={[5]=-1}
+d[143]={[5]=-1}
+d[150]={[5]=-1}
 d[151]={[5]=-1}
 d[153]={[5]=-1}
 d[166]={[4]=10}
+d[178]={[4]=10,[5]=-1}
+d[180]={[5]=-1}
 d[184]={[5]=-1}
 d[208]={[5]=-1}
 d[214]={[4]=10,[5]=-1}
 d[236]={[2]={[1]={31108}},[3]={[1]={31108}}}
+d[244]={[5]=-1}
+d[246]={[5]=-1}
 d[249]={[2]={[1]={313},[2]={31}}}
 d[403]={[2]={[2]={269}},[3]={[2]={269}}}
 d[635]={[2]={[3]={4614,187515,187516}}}
@@ -47,6 +75,7 @@ d[3644]={[2]={[1]={8126}},[3]={[1]={8126}}}
 d[3645]={[2]={[1]={7944}},[3]={[1]={7944}}}
 d[3646]={[2]={[1]={8738}},[3]={[1]={8738}}}
 d[3647]={[2]={[1]={7406}},[3]={[1]={7406}}}
+d[3741]={[5]=-1}
 d[3763]={[2]={[1]={6735}}}
 d[3789]={[2]={[1]={6740}}}
 d[3790]={[2]={[1]={5111}}}
@@ -374,6 +403,54 @@ d[14174]={[2]={[1]={34476}},[3]={[1]={34476}}}
 d[14175]={[2]={[1]={34477}},[3]={[1]={34477}}}
 d[14176]={[2]={[1]={34480}},[3]={[1]={34480}}}
 d[14177]={[2]={[1]={34482}},[3]={[1]={34482}}}
+d[14204]={[1]="Hero's Call: Westfall!",[2]={[2]={402000}},[3]={[1]={234}},[4]=10,[5]=10,[6]=0,[8]={"Report to Gryan Stoutmantle at Sentinel Hill in Westfall."},[17]=40}
+d[14205]={[1]="Hero's Call: Northern Stranglethorn!",[2]={[2]={402000}},[3]={[1]={733}},[4]=30,[5]=30,[6]=0,[8]={"Report to Sergeant Yohwa at the Rebel Camp in Northern Stranglethorn."},[17]=33}
+d[14206]={[1]="Hero's Call: Booty Bay!",[2]={[2]={402000}},[3]={[1]={2498}},[4]=35,[5]=35,[6]=0,[8]={"Report to Crank Fizzlebub at Booty Bay in Southern Stranglethorn."},[17]=33}
+d[14207]={[1]="Hero's Call: Blasted Lands!",[2]={[2]={402000}},[3]={[1]={5393}},[4]=55,[5]=55,[6]=0,[8]={"Report to Quartermaster Lungertz at Nethergarde Keep."},[17]=4}
+d[14208]={[1]="Hero's Call: Duskwood!",[2]={[2]={402000}},[3]={[1]={264}},[4]=20,[5]=20,[6]=0,[8]={"Report to Commander Althea Ebonlocke at Darkshire in Duskwood."},[17]=10}
+d[14209]={[1]="Hero's Call: Redridge Mountains!",[2]={[2]={402000}},[3]={[1]={903}},[4]=20,[5]=20,[6]=0,[8]={"Report to Guard Howe at Lakeshire in Redridge Mountains."},[17]=44}
+d[14210]={[1]="Hero's Call: Burning Steppes!",[2]={[2]={402000}},[3]={[1]={9177}},[4]=50,[5]=50,[6]=0,[8]={"Report to Oralius at Morgan's Vigil in the Burning Steppes."},[17]=46}
+d[14211]={[1]="Hero's Call: Searing Gorge!",[2]={[2]={402000}},[3]={[1]={14627}},[4]=45,[5]=45,[6]=0,[8]={"Report to Hansel Heavyhands at Thorium Point in the Searing Gorge."},[17]=51}
+d[14212]={[1]="Hero's Call: Loch Modan!",[2]={[2]={402000}},[3]={[1]={1139}},[4]=10,[5]=10,[6]=0,[8]={"Report to Magistrate Bluntnose at Thelsamar in Loch Modan."},[17]=38}
+d[14213]={[1]="Hero's Call: Wetlands!",[2]={[2]={402000}},[3]={[1]={2086}},[4]=25,[5]=25,[6]=0,[8]={"Report to Valstag Ironjaw at Menethil Keep in the Wetlands."},[17]=11}
+d[14214]={[1]="Hero's Call: Arathi Highlands!",[2]={[2]={402000}},[3]={[1]={2700}},[4]=30,[5]=30,[6]=0,[8]={"Report to Captain Nials at Refuge Pointe in Arathi Highlands."},[17]=45}
+d[14215]={[1]="Hero's Call: Hillsbrad Foothills!",[2]={[2]={402000}},[3]={[1]={2263}},[4]=30,[5]=30,[6]=0,[8]={"Report to Marshal Redpath at Southshore in Hillsbrad Foothills."},[17]=267}
+d[14216]={[1]="Hero's Call: The Hinterlands!",[2]={[2]={402000}},[3]={[1]={5636}},[4]=45,[5]=45,[6]=0,[8]={"Report to Gryphon Master Talonaxe at Aerie Peak in The Hinterlands."},[17]=47}
+d[14218]={[1]="Hero's Call: Western Plaguelands!",[2]={[2]={402000}},[3]={[1]={10838}},[4]=50,[5]=50,[6]=0,[8]={"Report to Commander Ashlam Valorfist at Chillwind Camp in Western Plaguelands."},[17]=28}
+d[14219]={[1]="Hero's Call: Eastern Plaguelands!",[2]={[2]={402000}},[3]={[1]={16116}},[4]=55,[5]=55,[6]=0,[8]={"Report to Archmage Angela Dosantos at Light's Hope Chapel in Eastern Plaguelands."},[17]=139}
+d[14220]={[1]="Hero's Call: Darkshore!",[2]={[2]={402000}},[3]={[1]={8997}},[4]=10,[5]=10,[6]=0,[8]={"Report to Gershala Nightwhisper at Auberdine in Darkshore."},[17]=148}
+d[14221]={[1]="Hero's Call: Winterspring!",[2]={[2]={402000}},[3]={[1]={11755}},[4]=55,[5]=55,[6]=0,[8]={"Report to Harlo Wigglesworth at Everlook in Winterspring."},[17]=618}
+d[14222]={[1]="Hero's Call: Ashenvale!",[2]={[2]={402000}},[3]={[1]={3845}},[4]=20,[5]=20,[6]=0,[8]={"Report to Shindrell Swiftfire at Astranaar in Ashenvale."},[17]=331}
+d[14223]={[1]="Hero's Call: Desolace!",[2]={[2]={402000}},[3]={[1]={5752}},[4]=30,[5]=30,[6]=0,[8]={"Report to Corporal Melkins at Nijel's Point in Desolace."},[17]=405}
+d[14224]={[1]="Hero's Call: Feralas!",[2]={[2]={402000}},[3]={[1]={3936}},[4]=40,[5]=40,[6]=0,[8]={"Report to Shandris Feathermoon at Feathermoon Stronghold in Feralas."},[17]=2866}
+d[14225]={[1]="Hero's Call: Dustwallow Marsh!",[2]={[2]={402000}},[3]={[1]={23951}},[4]=40,[5]=40,[6]=0,[8]={"Report to Lieutenant Aden at Theramore Isle in Dustwallow Marsh."},[17]=15}
+d[14226]={[1]="Hero's Call: Tanaris!",[2]={[2]={402000}},[3]={[1]={7407}},[4]=40,[5]=40,[6]=0,[8]={"Report to Chief Engineer Bilgewhizzle at Gadgetzan in Tanaris."},[17]=440}
+d[14227]={[1]="Hero's Call: Un'Goro Crater!",[2]={[2]={402000}},[3]={[1]={9270}},[4]=50,[5]=50,[6]=0,[8]={"Report to Williden Marshal at Marshal's Refuge in Un'Goro Crater."},[17]=490}
+d[14228]={[1]="Hero's Call: Silithus!",[2]={[2]={402000}},[3]={[1]={15191}},[4]=55,[5]=55,[6]=0,[8]={"Report to Windcaller Proudhorn at Cenarion Hold in Silithus."},[17]=1377}
+d[14229]={[1]="Warchief's Command: Winterspring!",[2]={[2]={402001}},[3]={[1]={11755}},[4]=55,[5]=55,[6]=0,[8]={"Report to Harlo Wigglesworth at Everlook in Winterspring."},[17]=618}
+d[14230]={[1]="Warchief's Command: Felwood!",[2]={[2]={402001}},[3]={[1]={10922}},[4]=50,[5]=50,[6]=0,[8]={"Report to Greta Mosshoof at the Emerald Sanctuary in Felwood."},[17]=361}
+d[14231]={[1]="Warchief's Command: Ashenvale!",[2]={[2]={402001}},[3]={[1]={12721}},[4]=19,[5]=19,[6]=0,[8]={"Report to Mitsuwa at Zoram'gar Outpost in Ashenvale."},[17]=331}
+d[14232]={[1]="Warchief's Command: The Barrens!",[2]={[2]={402001},[3]={49010}},[3]={[1]={3338}},[4]=10,[5]=10,[6]=0,[8]={"Report to Sergra Darkthorn at The Crossroads in the Barrens."},[17]=17}
+d[14233]={[1]="Warchief's Command: Ratchet!",[2]={[2]={402001}},[3]={[1]={3446}},[4]=15,[5]=15,[6]=0,[8]={"Report to Mebok Mizzyrix at Ratchet in the Barrens."},[17]=17}
+d[14234]={[1]="Warchief's Command: Stonetalon Mountains!",[2]={[2]={402001}},[3]={[1]={11860}},[4]=25,[5]=25,[6]=0,[8]={"Report to Maggran Earthbinder at Sun Rock Retreat in Stonetalon Mountains."},[17]=406}
+d[14235]={[1]="Warchief's Command: Desolace!",[2]={[2]={402001}},[3]={[1]={5641}},[4]=35,[5]=35,[6]=0,[8]={"Report to Takata Steelblade at Ghost Walker Post in Desolace."},[17]=405}
+d[14236]={[1]="Warchief's Command: Dustwallow Marsh!",[2]={[2]={402001}},[3]={[1]={4926}},[4]=35,[5]=35,[6]=0,[8]={"Report to Krog at Brackenwall Village in Dustwallow Marsh."},[17]=15}
+d[14237]={[1]="Warchief's Command: Feralas!",[2]={[2]={402001}},[3]={[1]={8115}},[4]=40,[5]=40,[6]=0,[8]={"Report to Witch Doctor Uzer'i at Camp Mojache in Feralas."},[17]=357}
+d[14238]={[1]="Warchief's Command: Thousand Needles!",[2]={[2]={402001}},[3]={[1]={10539}},[4]=25,[5]=25,[6]=0,[8]={"Report to Hagar Lightninghoof at Freewind Post in Thousand Needles."},[17]=400}
+d[14239]={[1]="Warchief's Command: Tanaris!",[2]={[2]={402001}},[3]={[1]={7407}},[4]=40,[5]=40,[6]=0,[8]={"Report to Chief Engineer Bilgewhizzle at Gadgetzan in Tanaris."},[17]=440}
+d[14240]={[1]="Warchief's Command: Un'Goro Crater!",[2]={[2]={402001}},[3]={[1]={9270}},[4]=50,[5]=50,[6]=0,[8]={"Report to Williden Marshal at Marshal's Refuge in Un'Goro Crater."},[17]=490}
+d[14241]={[1]="Warchief's Command: Silithus!",[2]={[2]={402001}},[3]={[1]={15191}},[4]=55,[5]=55,[6]=0,[8]={"Report to Windcaller Proudhorn at Cenarion Hold in Silithus."},[17]=1377}
+d[14242]={[1]="Warchief's Command: Silverpine Forest!",[2]={[2]={402001}},[3]={[1]={1938}},[4]=10,[5]=10,[6]=0,[8]={"Report to Dalar Dawnweaver at The Sepulcher in Silverpine Forest."},[17]=130}
+d[14243]={[1]="Warchief's Command: Hillsbrad Foothills!",[2]={[2]={402001}},[3]={[1]={2418}},[4]=20,[5]=20,[6]=0,[8]={"Report to Deathguard Samsa at Tarren Mill in Hillsbrad Foothills."},[17]=267}
+d[14244]={[1]="Warchief's Command: Arathi Highlands!",[2]={[2]={402001}},[3]={[1]={2706}},[4]=30,[5]=30,[6]=0,[8]={"Report to Tor'gan at Hammerfall in Arathi Highlands."},[17]=45}
+d[14245]={[1]="Warchief's Command: The Hinterlands!",[2]={[2]={402001}},[3]={[1]={14738}},[4]=45,[5]=45,[6]=0,[8]={"Report to Otho Moji'ko at Revantusk Village in the Hinterlands."},[17]=47}
+d[14246]={[1]="Warchief's Command: Western Plaguelands!",[2]={[2]={402001}},[3]={[1]={10837}},[4]=50,[5]=50,[6]=0,[8]={"Report to High Executor Derrington at the Bulwark in Western Plaguelands."},[17]=28}
+d[14247]={[1]="Warchief's Command: Eastern Plaguelands!",[2]={[2]={402001}},[3]={[1]={16116}},[4]=55,[5]=55,[6]=0,[8]={"Report to Archmage Angela Dosantos at Light's Hope Chapel in Eastern Plaguelands."},[17]=139}
+d[14248]={[1]="Warchief's Command: Searing Gorge!",[2]={[2]={402001}},[3]={[1]={14627}},[4]=45,[5]=45,[6]=0,[8]={"Report to Hansel Heavyhands at Thorium Point in the Searing Gorge."},[17]=51}
+d[14249]={[1]="Warchief's Command: Badlands!",[2]={[2]={402001}},[3]={[1]={1068}},[4]=40,[5]=40,[6]=0,[8]={"Report to Gorn at Kargath in Badlands."},[17]=3}
+d[14250]={[1]="Warchief's Command: Swamp of Sorrows!",[2]={[2]={402001}},[3]={[1]={5591}},[4]=40,[5]=40,[6]=0,[8]={"Report to Dar at Stonard in Swamp of Sorrows."},[17]=8}
+d[14251]={[1]="Warchief's Command: Northern Stranglethorn!",[2]={[2]={402001}},[3]={[1]={2464}},[4]=35,[5]=35,[6]=0,[8]={"Report to Commander Aggro'gosh at Grom'gol Base Camp in the Northern Stranglethorn Vale."},[17]=33}
+d[14252]={[1]="Warchief's Command: Booty Bay!",[2]={[2]={402001}},[3]={[1]={2498}},[4]=35,[5]=35,[6]=0,[8]={"Report to Crank Fizzlebub at Booty Bay in Southern Stranglethorn."},[17]=33}
 d[17001]={[2]={[1]={66}},[3]={[1]={66}},[5]=9}
 d[17002]={[2]={[1]={900017}},[3]={[1]={900017}},[4]=7}
 d[17003]={[2]={[1]={900017}},[3]={[1]={900017}},[4]=7}
@@ -385,7 +462,6 @@ d[17008]={[4]=7}
 d[17009]={[1]="Sunken Treasure",[2]={[3]={157016}},[3]={[2]={96005}},[4]=13,[5]=15,[6]=0,[8]={"Find the Waterlogged Trunk off the coast of Westfall."},[17]=40,[23]=544}
 d[17011]={[1]="Riverpaw Genocide",[2]={[1]={157002}},[3]={[1]={157002}},[4]=10,[5]=11,[6]=0,[8]={"Slay 8 Riverpaw Brutes, 12 Riverpaw Mongrels, and 10 Riverpaw Herbalists."},[10]={[1]={{[1]=124},{[1]=123},{[1]=501}}},[17]=40,[23]=8}
 d[17012]={[1]="Riverpaw Genocide",[2]={[1]={157002}},[3]={[1]={157002}},[4]=10,[5]=13,[6]=0,[8]={"Slay 12 Riverpaw Bandits, 10 Riverpaw Taskmasters, and 8 Riverpaw Mystics."},[10]={[1]={{[1]=452},{[1]=98},{[1]=453}}},[13]={17011},[17]=40}
-d[17014]={[1]="The Killing Fields",[2]={[1]={233}},[3]={[1]={233}},[4]=10,[5]=17,[6]=1101,[8]={"Farmer Saldean wants you to kill 15 Harvest Reapers."},[10]={[1]={{[1]=115}}},[17]=40}
 d[17838]={[1]="Thinning the Bloodmaul",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=70,[5]=70,[6]=0,[8]={"Slay Bloodmaul ogres and wolves in Southern Blade's Edge Mountains."},[10]={[1]={{[1]=21238},{[1]=19991},{[1]=19957},{[1]=20058}}},[17]=-380,[23]=4096,[24]=1}
 d[17926]={[1]="Winterfall Purge",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=60,[5]=60,[6]=0,[8]={"Defeat 6 Winterfall Pathfinders and 6 Winterfall Totemics in Winterspring."},[10]={[1]={{[1]=7442},{[1]=7441}}},[17]=-380,[23]=4096,[24]=1}
 d[18017]={[1]="Culling the Felpaw",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=60,[5]=60,[6]=0,[8]={"Eliminate 6 Deadwood Shamans, 6 Deadwood Avengers, and 4 Deadwood Den Watchers in Felwood."},[10]={[1]={{[1]=7158},{[1]=7157},{[1]=7156}}},[17]=-380,[23]=4096,[24]=1}
@@ -545,6 +621,7 @@ d[55110]={[1]="Plains Hunter Guide",[2]={[1]={2980}},[3]={[1]={9300301}},[4]=2,[
 d[80651]={[1]="Duel!",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=60,[5]=-1,[6]=0,[8]={"You have been challenged to duel five other heroes."},[10]={[1]={{80027,"Players defeated in a duel"}}},[17]=-381,[23]=4096,[24]=1}
 d[81244]={[1]="Dungeon Diving",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=50,[5]=60,[6]=0,[8]={"Bring proof of your successful completion of a Normal dungeon to the Callboard in any major city."},[10]={[1]={{81042,"Complete any LFG dungeon"}}},[17]=-380,[23]=4096,[24]=1}
 d[81245]={[1]="Heroic Dungeon Diving",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=60,[5]=60,[6]=0,[8]={"Bring proof of your successful completion of a Heroic dungeon to the Callboard in any major city."},[10]={[1]={{81041,"Complete any Heroic LFG dungeon"}}},[17]=-380,[23]=4096,[24]=1}
+d[81246]={[1]="Mythic Dungeon Diving",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=60,[5]=60,[6]=0,[8]={"Bring proof of your successful completion of a Mythic dungeon to the Callboard in any major city."},[10]={[1]={{80652,"Complete any Mythic LFG dungeon"}}},[17]=-380,[23]=4096,[24]=1}
 d[81260]={[1]="Call to Arms: Battleground",[2]={[2]={402000,402001}},[3]={[2]={402000,402001}},[4]=10,[5]=-1,[6]=0,[8]={"Win any battleground match and return to the Call Board for your reward."},[17]=-381,[23]=4096,[24]=3}
 d[100071]={[4]=4}
 d[100073]={[4]=5}
@@ -676,8 +753,8 @@ d[254004]={[4]=1,[5]=2}
 d[254010]={[3]={[2]={254004}},[4]=1,[5]=2}
 d[254011]={[2]={[2]={254004}},[3]={[1]={254012}},[4]=1,[5]=2}
 d[254013]={[4]=8}
-d[254038]={[1]="Start Digging",[2]={[1]={996114}},[3]={[1]={996115}},[4]=6,[5]=7,[6]=0,[8]={"Meet Serina at the rendezvous point near Bandits’ Bastion."},[17]=12,[23]=8}
-d[254041]={[1]="Report To The General",[2]={[1]={996115}},[3]={[1]={466}},[4]=5,[5]=8,[6]=0,[8]={"Bring this information to General Marcus Jonathan"},[13]={254038},[17]=12,[23]=8}
+d[254038]={[1]="Start Digging",[2]={[1]={996114}},[3]={[1]={996115}},[4]=6,[5]=7,[6]=1101,[8]={"Meet Serina at the rendezvous point near Bandits’ Bastion."},[17]=12,[23]=8}
+d[254041]={[1]="Report To The General",[2]={[1]={996115}},[3]={[1]={466}},[4]=5,[5]=8,[6]=1101,[8]={"Bring this information to General Marcus Jonathan"},[13]={254038},[17]=12,[23]=8}
 d[254042]={[1]="Wanted: Lenore the Hoarder",[2]={[1]={878},[2]={518551}},[3]={[1]={490}},[4]=9,[5]=12,[6]=1101,[8]={"Kill Lenore the Hoarder and return to Protector Gariel at Sentinel Hill."},[10]={[1]={{[1]=991515}}},[17]=40}
 d[254043]={[1]="Take It Back",[2]={[1]={490}},[3]={[1]={490}},[4]=9,[5]=12,[6]=1101,[8]={"Protector Gariel wants you to gather Westfall Supplies, then return to her at Sentinel Hill."},[10]={[3]={{1252801}}},[17]=40}
 d[254051]={[1]="Save The Crocs",[2]={[1]={764542}},[3]={[1]={764542}},[4]=10,[5]=15,[6]=0,[8]={"Sinter Wive wants you to retrieve the Crocolisk Egg from the Trogg \"Poachers\" on the island to the North."},[10]={[3]={{1252808}}},[17]=12}
@@ -691,14 +768,44 @@ d[254060]={[1]="Warborn Grounds: \"Deathscreech\"",[2]={[1]={991518}},[3]={[1]={
 d[254061]={[1]="Warborn Grounds: \"The Masher\"",[2]={[1]={991518}},[3]={[1]={255101}},[4]=6,[5]=8,[6]=690,[8]={"Defeat the third challenger: \"The Masher\""},[13]={254060},[17]=14,[22]=254062,[23]=7,[24]=2}
 d[254062]={[1]="Warborn Grounds: \"Shadowblood\"",[2]={[1]={991518}},[3]={[1]={255101}},[4]=7,[5]=9,[6]=690,[8]={"Defeat the fourth challenger: \"Shadowblood\""},[13]={254061},[17]=14,[22]=254063,[23]=7,[24]=2}
 d[254063]={[1]="Warborn Grounds: One Last Battle",[2]={[1]={991518}},[3]={[1]={255101}},[4]=7,[5]=9,[6]=690,[8]={"Be crowned champion of Orcamania"},[13]={254062},[17]=14,[23]=7,[24]=2}
+d[254067]={[1]="Minervia's Legacy",[2]={[1]={991476}},[3]={[1]={346}},[4]=12,[5]=25,[6]=1101,[8]={"Search the Three Corners Tower and Lakeshire for clues to Archmage Minervia's staff."},[10]={[1]={{991477,"Ask Ley-Tracker Hestlor"},{344,"Ask Magistrate Solomon"}}},[17]=44,[22]=254068,[23]=8}
+d[254068]={[1]="Minervia's Past",[2]={[1]={346}},[3]={[1]={254969}},[4]=12,[5]=25,[6]=1101,[8]={"Investigate the Tower of Ilgalar for clues to Archmage Minervia's disappearance."},[10]={[1]={{254969,"Search the Tower of Ilgalar for Minervia's whereabouts"}}},[13]={254067},[17]=44,[22]=254069,[23]=8}
+d[254069]={[1]="Minervia's Fate",[2]={[1]={254969}},[3]={[1]={991476}},[4]=12,[5]=25,[6]=1101,[8]={"Investigate the grave at Lakeshire."},[10]={[1]={{254971,"Uncover the truth of Minervia's disappearance"}},[3]={{354659}}},[13]={254068},[17]=44,[23]=8}
+d[254070]={[1]="Lost Secrets",[2]={[2]={518612}},[3]={[2]={518612}},[4]=12,[5]=26,[6]=0,[8]={"Recover the Codex of Secrets' lost page."},[10]={[3]={{354660}}},[17]=44,[23]=8}
+d[254071]={[1]="The Rookery",[2]={[1]={991474}},[3]={[1]={991474}},[4]=12,[5]=18,[6]=1101,[8]={"Obtain a Pristine Black Dragon Egg"},[10]={[3]={{354661}}},[17]=44,[23]=8}
 d[254084]={[1]="Fighter Fuel",[2]={[1]={99003}},[3]={[1]={99003}},[4]=6,[5]=8,[6]=690,[8]={"Shinga the nurse wants you to collect 4 Vials of Scorpid Venom, 4 Vials of Raptor Blood, and 4 Boar Tusks."},[10]={[3]={{354316},{354317},{354318}}},[17]=14,[23]=8}
-d[254095]={[1]="Arcane Insight",[2]={[1]={996115}},[3]={[1]={313}},[4]=6,[5]=7,[6]=0,[8]={"Deliver the mineral fragment to the Tower of Azora and seek magical insight into its properties and potential use."},[10]={[3]={{354526}}},[11]=354526,[13]={254038},[17]=12}
+d[254086]={[1]="The Interrogation",[2]={[1]={255023}},[3]={[1]={255023}},[4]=18,[5]=24,[6]=1101,[8]={"Oswin Drake of the Night Watch needs help interrogating the captured worgen"},[10]={[1]={{764561,"Worgen Interrogated"}}},[17]=10,[22]=254087,[23]=8}
+d[254087]={[1]="Taken By the Dark",[2]={[1]={255023}},[3]={[1]={254904}},[4]=18,[5]=24,[6]=1101,[8]={"Find Julie Addle at the Scarlet Raven Tavern"},[13]={254086},[17]=10,[22]=254088,[23]=8}
+d[254088]={[1]="Addle's Stead",[2]={[1]={254904}},[3]={[1]={254904}},[4]=18,[5]=24,[6]=1101,[8]={"Find some trace of Arvis Addle's old life at Addle's Stead"},[10]={[3]={{354319}}},[13]={254087},[17]=10,[22]=254089,[23]=8}
+d[254089]={[1]="Addle's Stead",[2]={[1]={254904}},[3]={[1]={254906}},[4]=18,[5]=24,[6]=1101,[8]={"Bring the half-finished book and a bottle of Sweet Nectar to the captured worgen"},[10]={[3]={{1708}}},[13]={254088},[17]=10,[22]=254091,[23]=8}
+d[254091]={[1]="May We Be Reunited",[2]={[1]={254906}},[3]={[1]={764560}},[4]=18,[5]=24,[6]=1101,[8]={"Speak with Arvis Addle, the captured worgen"},[10]={[1]={{254905,"Arvis Addle Questioned"}}},[13]={254089},[17]=10,[23]=8}
+d[254095]={[1]="Arcane Insight",[2]={[1]={996115}},[3]={[1]={313}},[4]=6,[5]=7,[6]=1101,[8]={"Deliver the mineral fragment to the Tower of Azora and seek magical insight into its properties and potential use."},[10]={[3]={{354526}}},[11]=354526,[13]={254038},[17]=12}
 d[254098]={[1]="Mixed Reagents",[2]={[1]={313}},[3]={[1]={958}},[4]=6,[5]=8,[6]=1101,[8]={"Get the Bundle of Samples to Dawn Brightstar."},[10]={[3]={{354525}}},[11]=354525,[13]={254095},[17]=12}
 d[254099]={[1]="Test the Mix",[2]={[1]={958}},[3]={[1]={313}},[4]=6,[5]=8,[6]=1101,[8]={"Drink the \"Enriched\" Mineral Water to check for any ill affects."},[11]=354524,[13]={254098},[17]=12,[24]=2}
 d[254106]={[1]="Enchant the Mineral",[2]={[1]={313}},[3]={[1]={11072}},[4]=6,[5]=8,[6]=1101,[8]={"Bring Mineral Fragment to Kitta Firewind."},[10]={[3]={{354527}}},[11]=354527,[13]={254099},[17]=12}
 d[254107]={[1]="Unexpected Results",[2]={[1]={11072}},[3]={[1]={996114}},[4]=6,[5]=9,[6]=1101,[8]={"Test the Enchanted Mineral Fragment."},[10]={[1]={{996121,"Test Minerals Potency"}},[3]={{354047}}},[11]=354047,[13]={254106},[17]=12}
-d[254108]={[1]="Final Dig",[2]={[1]={996114}},[3]={[1]={996114}},[4]=6,[5]=9,[6]=0,[8]={"Find Defias mole inside Lion's Pride Inn."},[10]={[1]={{996120,"Find the Mole"}}},[13]={254107},[17]=12}
+d[254108]={[1]="Final Dig",[2]={[1]={996114}},[3]={[1]={996114}},[4]=6,[5]=9,[6]=1101,[8]={"Find Defias mole inside Lion's Pride Inn."},[10]={[1]={{996120,"Find the Mole"}}},[13]={254107},[17]=12}
 d[255057]={[1]="Militia Training",[2]={[1]={776786}},[3]={[1]={776786}},[4]=10,[5]=-1,[6]=1101,[8]={"Practice your skills against the Militia Recruits."},[10]={[1]={{255339,"Militia Recruits Defeated"}}},[17]=40,[23]=8}
+d[255067]={[1]="Til Undeath Do We Part",[2]={[1]={751496}},[3]={[1]={3136}},[4]=20,[5]=27,[6]=1101,[8]={"Collect wedding rings from under at Raven Hill Cemetary."},[10]={[3]={{355112}}},[17]=10,[22]=255068,[23]=8}
+d[255068]={[1]="An Incomplete Order",[2]={[1]={3136}},[3]={[1]={3136}},[4]=20,[5]=27,[6]=1101,[8]={"Collect gemstones at the Vul'Gol Ogre Mound."},[10]={[3]={{355113}}},[13]={255067},[17]=10,[22]=255069,[23]=8}
+d[255069]={[1]="From Death Comes Love",[2]={[1]={3136}},[3]={[1]={751496}},[4]=20,[5]=27,[6]=1101,[8]={"Bring the delivery to Eleanor Zemille."},[13]={255068},[17]=10,[23]=8}
+d[255070]={[1]="Tilling Against the Taint",[2]={[1]={255157}},[3]={[1]={255157}},[4]=20,[5]=26,[6]=1101,[8]={"Collect Enchanted Dust for Ryton Altham."},[10]={[3]={{355114}}},[17]=10,[23]=8}
+d[255071]={[1]="Strangers in Our Midst",[2]={[1]={264}},[3]={[1]={751502}},[4]=20,[5]=26,[6]=1101,[8]={"Find the stranger lingering at the edge of town."},[17]=10,[23]=8}
+d[255072]={[1]="The Fool and the Foul",[2]={[1]={751502}},[3]={[1]={751502}},[4]=20,[5]=26,[6]=1101,[8]={"Scout locations around Duskwood for Quill the Foolish."},[10]={[1]={{255360,"Tranquil Gardens Cemetary"},{255361,"Raven Hill"},{255362,"Vul’Gol Ogre Mound"},{255363,"Brightwood Grove"}}},[13]={255071},[17]=10,[23]=8}
+d[255073]={[1]="Skittering Bedfellows",[2]={[1]={751496}},[3]={[1]={751496}},[4]=18,[5]=24,[6]=1101,[8]={"Slay Black Widow Hatchlings in Duskwood."},[10]={[1]={{[1]=930}}},[17]=10,[23]=8}
+d[255074]={[1]="Supplies and Safety",[2]={[1]={751501}},[3]={[1]={888}},[4]=19,[5]=25,[6]=1101,[8]={"Collect meat from Young Black Ravagers, Black Ravager Mastiffs, and Black Ravagers"},[10]={[3]={{355115}}},[17]=10,[23]=8}
+d[255078]={[1]="Play It by Ear",[2]={[1]={41719}},[3]={[1]={41719}},[4]=9,[5]=13,[6]=690,[8]={"Raj’iri wants to dance with her sister, but Naj’iri isn’t in the mood. Maybe some music will help get her off her feet. Collect a centaur windflute from Kolkar Wranglers, and Kolkar Stormers."},[10]={[3]={{355118}}},[17]=17,[22]=255079,[23]=8}
+d[255079]={[1]="Finding the Rhythm",[2]={[1]={41719}},[3]={[1]={41739}},[4]=11,[5]=15,[6]=690,[8]={"Maybe a flute was the wrong instrument. Gather 5 Hecklefang Hyena skins, 1 Barrens Giraffe Leather, and 3 silver. Then deliver it to Unah to make a drum."},[10]={[3]={{355119},{355120}}},[13]={255078},[17]=17,[22]=255080,[23]=8}
+d[255080]={[1]="Dancing to the Beat",[2]={[1]={41739}},[3]={[1]={41719}},[4]=11,[5]=15,[6]=690,[8]={"There’s been a party in the tauren lodge for a while with lots of dancing. Ask the drummer Brumbof, if he has an extra stick he can spare. Acquire the drumstick and deliver it to Taz’iri along with the drum."},[10]={[3]={{355122}}},[13]={255079},[17]=17,[23]=8}
+d[255081]={[1]="Understanding the Scriptures",[2]={[1]={741722}},[3]={[1]={741722}},[4]=7,[5]=11,[6]=690,[8]={"Hearing of the power of the Burning Blade cult, Martin asks you to retrieve some of their demonic scriptures from Burning Blade Acolytes, and Burning Blade Bruisers so he can study them and perhaps learn something of their power."},[10]={[3]={{355123}}},[17]=17,[23]=8}
+d[255082]={[1]="Killing the Competition",[2]={[1]={753524}},[3]={[1]={753524}},[4]=10,[5]=14,[6]=690,[8]={"Voltzix Sprocketpop wants you to kill Venture Co. forces at the sludge field to the north."},[10]={[1]={{[1]=3282},{[1]=3284},{[1]=3285}}},[17]=17,[22]=255083,[23]=8}
+d[255083]={[1]="Annihilating the Competition",[2]={[1]={753524}},[3]={[1]={753524}},[4]=12,[5]=16,[6]=690,[8]={"Voltzix Sprocketpop wants you to kill Venture Co. forces at the Boulder Lode Mine to the north."},[10]={[1]={{[1]=3283},{[1]=3286}}},[13]={255082},[17]=17,[23]=8}
+d[255111]={[1]="Alternative Allies",[2]={[1]={255206}},[3]={[1]={991477}},[4]=11,[5]=16,[6]=1101,[8]={"Meet with Ley-Tracker Hestlor at the Red Mage Tower on behalf of Lady Idelia Solomon."},[17]=44,[22]=255112,[23]=8}
+d[255112]={[1]="Old Mistakes",[2]={[1]={991477}},[3]={[1]={255206}},[4]=11,[5]=16,[6]=1101,[8]={"Return to Lady Idelia Solomon with news of Hestlor's response."},[13]={255111},[17]=44,[23]=8}
+d[255113]={[1]="Food Fit for Gnolls",[2]={[1]={255204}},[3]={[1]={255204}},[4]=11,[5]=17,[6]=1101,[8]={"Collect Gnoll Food Supplies from gnoll camps around Redridge for Luca Tyndall."},[10]={[3]={{355199}}},[17]=44,[23]=8}
+d[255114]={[1]="Blessings of the Light",[2]={[1]={255207}},[3]={[1]={255207}},[4]=18,[5]=25,[6]=1101,[8]={"Recover the Chalice of Tyrenel for Father Norice."},[10]={[3]={{355200}}},[17]=44,[23]=8}
+d[255116]={[1]="Reclaiming Alther's Mill",[2]={[1]={255206}},[3]={[1]={255206}},[4]=13,[5]=19,[6]=1101,[8]={"Slay Greater Tarantulas around Alther's Mill to help the people of Lakeshire reclaim the area."},[10]={[1]={{[1]=505}}},[17]=44,[23]=8}
+d[255117]={[1]="Pefectly Good Planks",[2]={[1]={341}},[3]={[1]={341}},[4]=13,[5]=19,[6]=1101,[8]={"Collect Wood Planks from Alther's Mill for Foreman Oslow."},[10]={[3]={{355201}}},[17]=44,[23]=8}
 d[500004]={[1]="The Circle’s Rite",[4]=4}
 d[500005]={[4]=5,[5]=7}
 d[500006]={[4]=6}

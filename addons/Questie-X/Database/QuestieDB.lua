@@ -605,25 +605,29 @@ function QuestieDB:Initialize()
         itemPtrs = binaryBucket.itemPtrs
     end
 
-    QuestieDB.QueryNPC = QuestieDBCompiler:GetDBHandle(npcBin, npcPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.npcCompilerTypes, QuestieDB.npcCompilerOrder), QuestieDB.npcKeys, QuestieDB.npcDataOverrides)
-    QuestieDB.QueryQuest = QuestieDBCompiler:GetDBHandle(questBin, questPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.questCompilerTypes, QuestieDB.questCompilerOrder), QuestieDB.questKeys, QuestieDB.questDataOverrides)
-    QuestieDB.QueryObject = QuestieDBCompiler:GetDBHandle(objBin, objPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.objectCompilerTypes, QuestieDB.objectCompilerOrder), QuestieDB.objectKeys, QuestieDB.objectDataOverrides)
-    QuestieDB.QueryItem = QuestieDBCompiler:GetDBHandle(itemBin, itemPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.itemCompilerTypes, QuestieDB.itemCompilerOrder), QuestieDB.itemKeys, QuestieDB.itemDataOverrides)
+    -- CoA fix: GetDBHandle yields, so build all four handles first. Assigning each handle (a table) to
+    -- QuestieDB.QueryNPC etc. right away left it a table while the next ones were built, and an NPC lookup
+    -- from an event in that window (e.g. the Learner's combat log) failed with "attempt to call field
+    -- 'QueryNPC' (a table value)". Until all are built the dummy Query functions above stay in place.
+    local npcHandle = QuestieDBCompiler:GetDBHandle(npcBin, npcPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.npcCompilerTypes, QuestieDB.npcCompilerOrder), QuestieDB.npcKeys, QuestieDB.npcDataOverrides)
+    local questHandle = QuestieDBCompiler:GetDBHandle(questBin, questPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.questCompilerTypes, QuestieDB.questCompilerOrder), QuestieDB.questKeys, QuestieDB.questDataOverrides)
+    local objectHandle = QuestieDBCompiler:GetDBHandle(objBin, objPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.objectCompilerTypes, QuestieDB.objectCompilerOrder), QuestieDB.objectKeys, QuestieDB.objectDataOverrides)
+    local itemHandle = QuestieDBCompiler:GetDBHandle(itemBin, itemPtrs, QuestieDBCompiler:BuildSkipMap(QuestieDB.itemCompilerTypes, QuestieDB.itemCompilerOrder), QuestieDB.itemKeys, QuestieDB.itemDataOverrides)
 
-    QuestieDB._QueryQuestSingle = QuestieDB.QueryQuest.QuerySingle
-    QuestieDB._QueryNPCSingle = QuestieDB.QueryNPC.QuerySingle
-    QuestieDB._QueryObjectSingle = QuestieDB.QueryObject.QuerySingle
-    QuestieDB._QueryItemSingle = QuestieDB.QueryItem.QuerySingle
+    QuestieDB._QueryQuestSingle = questHandle.QuerySingle
+    QuestieDB._QueryNPCSingle = npcHandle.QuerySingle
+    QuestieDB._QueryObjectSingle = objectHandle.QuerySingle
+    QuestieDB._QueryItemSingle = itemHandle.QuerySingle
 
-    QuestieDB.NPCPointers = QuestieDB.QueryNPC.pointers
-    QuestieDB.QuestPointers = QuestieDB.QueryQuest.pointers
-    QuestieDB.ObjectPointers = QuestieDB.QueryObject.pointers
-    QuestieDB.ItemPointers = QuestieDB.QueryItem.pointers
+    QuestieDB.NPCPointers = npcHandle.pointers
+    QuestieDB.QuestPointers = questHandle.pointers
+    QuestieDB.ObjectPointers = objectHandle.pointers
+    QuestieDB.ItemPointers = itemHandle.pointers
 
-    QuestieDB._QueryNPC = QuestieDB.QueryNPC.Query
-    QuestieDB._QueryQuest = QuestieDB.QueryQuest.Query
-    QuestieDB._QueryObject = QuestieDB.QueryObject.Query
-    QuestieDB._QueryItem = QuestieDB.QueryItem.Query
+    QuestieDB._QueryNPC = npcHandle.Query
+    QuestieDB._QueryQuest = questHandle.Query
+    QuestieDB._QueryObject = objectHandle.Query
+    QuestieDB._QueryItem = itemHandle.Query
 
     QuestieDB.QueryNPC = QuestieDB._QueryNPC
     QuestieDB.QueryQuest = QuestieDB._QueryQuest

@@ -198,8 +198,34 @@ local function _GetUiMapIdForZone(zone)
     return uiMapId
 end
 
+-- CoA fix: the arrow re-scans every spawn of every tracked objective each second (and on tracker updates). It
+-- converted each spawn to world coordinates again and built a table per spawn, then sorted them all, while only
+-- the nearest target is used: ~34 ms per refresh with a dozen quests, a stutter plus constant garbage on
+-- objectives with hundreds of spawns. Spawn positions never move, so their world positions are remembered,
+-- and only the nearest few targets are kept, already in distance order.
+local MAX_ARROW_TARGETS = 3
+local _spawnWorldCache = setmetatable({}, { __mode = "k" })
+
+local function _SpawnWorldPosition(key, x, y, uiMapId)
+    local cached = _spawnWorldCache[key]
+    if cached and cached[4] == uiMapId and cached[5] == x and cached[6] == y then
+        return cached[1], cached[2], cached[3]
+    end
+    local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)
+    _spawnWorldCache[key] = { tX or false, tY or false, tInst or false, uiMapId, x, y }
+    return tX, tY, tInst
+end
+
 local function _AddArrowTarget(x, y, uiMapId, title, questLevel, iconPath, worldX, worldY, worldInstance, distance)
-    table.insert(sortedTargets, {
+    local count = #sortedTargets
+    if count >= MAX_ARROW_TARGETS and distance >= sortedTargets[count].distance then
+        return
+    end
+    local pos = count + 1
+    while pos > 1 and sortedTargets[pos - 1].distance > distance do
+        pos = pos - 1
+    end
+    table.insert(sortedTargets, pos, {
         x = x,
         y = y,
         uiMapId = uiMapId,
@@ -211,6 +237,9 @@ local function _AddArrowTarget(x, y, uiMapId, title, questLevel, iconPath, world
         worldInstance = worldInstance,
         distance = distance,
     })
+    if count + 1 > MAX_ARROW_TARGETS then
+        sortedTargets[count + 1] = nil
+    end
 end
 
 local function _GetArrowStyleKey()
@@ -1016,7 +1045,7 @@ local function _CollectFinisherSpawns(finisher, quest)
                                     if true then
                                         local uiMapId = _GetUiMapIdForZone(zone)
                                         if uiMapId and x and y then
-                                            local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)
+                                            local tX, tY, tInst = _SpawnWorldPosition(value, x, y, uiMapId)
                                             if tX and tY and tInst then
                                                 local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)
                                                 if dist then
@@ -1037,7 +1066,7 @@ local function _CollectFinisherSpawns(finisher, quest)
                                 local y = coords[2]
                                 local uiMapId = _GetUiMapIdForZone(finisherZone)
                                 if uiMapId then
-                                    local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)
+                                    local tX, tY, tInst = _SpawnWorldPosition(coords, x, y, uiMapId)
                                     if tX and tY and tInst then
                                         local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)
                                         if dist then
@@ -1064,7 +1093,7 @@ local function _CollectFinisherSpawns(finisher, quest)
                     local y = waypoints[1][1][2]
                     local uiMapId = _GetUiMapIdForZone(zone)
                     if uiMapId and x and y then
-                        local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(x / 100.0, y / 100.0, uiMapId)
+                        local tX, tY, tInst = _SpawnWorldPosition(waypoints[1][1], x, y, uiMapId)
                         if tX and tY and tInst then
                             local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)
                             if dist then
@@ -1102,6 +1131,7 @@ local function _CollectObjective(objective, quest)
             print(string.format("      spawnData=%s Spawns=%s", spawnData and "yes" or "nil", spawnData and spawnData.Spawns and "yes" or "nil"))
         end
         if spawnData and spawnData.Spawns then
+            local iconPath = ResolveIconTexture(objective.Icon) or ResolveIconTexture(spawnData.Icon)
             for zone, spawns in pairs(spawnData.Spawns) do
                 -- Zone filtering is disabled in auto mode because zone IDs and area IDs
                 -- are different systems that don't directly compare. The distance
@@ -1117,7 +1147,7 @@ local function _CollectObjective(objective, quest)
                             print(string.format("          spawn=(%.1f,%.1f) uiMapId=%s", spawn[1], spawn[2], tostring(uiMapId)))
                         end
                         if uiMapId then
-                            local tX, tY, tInst = HBD:GetWorldCoordinatesFromZone(spawn[1] / 100.0, spawn[2] / 100.0, uiMapId)
+                            local tX, tY, tInst = _SpawnWorldPosition(spawn, spawn[1], spawn[2], uiMapId)
                             if tX and tY and tInst then
                                 local dist = HBD:GetWorldDistance(tInst, pX, pY, tX, tY)
                                 if dist then
@@ -1133,7 +1163,7 @@ local function _CollectObjective(objective, quest)
                                         uiMapId,
                                         quest.name,
                                         quest.level,
-                                        ResolveIconTexture(objective.Icon) or ResolveIconTexture(spawnData and spawnData.Icon),
+                                        iconPath,
                                         tX,
                                         tY,
                                         tInst,
@@ -1287,8 +1317,7 @@ function QuestieArrow:UpdateNearestTargets()
         end
     end
 
-    -- Sort by distance
-    table.sort(sortedTargets, _SortTargetByDistance)
+    -- sortedTargets is kept in distance order by _AddArrowTarget (CoA fix)
 end
 
 function QuestieArrow:Refresh()
