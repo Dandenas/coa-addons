@@ -19,6 +19,7 @@ robocopy "%ADDONS%\CoAMapProbe" "%REPO%addons\CoAMapProbe" %RC%
 robocopy "%ADDONS%\HealBot" "%REPO%addons\HealBot" %RC% /XD _CoA_original _CoA_backup*
 robocopy "%ADDONS%\ButtonForge" "%REPO%addons\ButtonForge" %RC% /XD _CoA_original _CoA_backup*
 for %%Q in (Questie-X Questie-X-AscensionDB Questie-X-WotLKDB Questie-X-CoADB) do robocopy "%ADDONS%\%%Q" "%REPO%addons\%%Q" %RC% /XD _CoA_original _CoA_backup*
+for %%Q in (AzerothAdmin AzerothAdmin_Models) do robocopy "%ADDONS%\%%Q" "%REPO%addons\%%Q" %RC% /XD _CoA_original _CoA_backup*
 rem Questie-X tools: the CoA map generator and the CoADB plugin builder (not the downloads, the server export or caches)
 robocopy "%TOOLS%\questie-x" "%REPO%tools\questie-x" %RC% /XD src zips __pycache__ Questie-X-CoADB /XF *.json.gz stock_index.tsv dump_err.txt *.pyc
 robocopy "%TOOLS%\zygor-coa" "%REPO%tools\zygor-coa" %RC% /XD __pycache__ /XF *.new *.pyc
@@ -38,6 +39,8 @@ rem coa-questie holds four addon folders plus the public tools
 for %%Q in (Questie-X Questie-X-WotLKDB Questie-X-AscensionDB Questie-X-CoADB) do call :pub coa-questie %%Q
 if exist "%PUB%coa-questie\.git" robocopy "%TOOLS%\questie-x" "%PUB%coa-questie\tools" %RC% /XD src zips __pycache__ Questie-X-CoADB /XF README.md CoAExtraZones.lua *.json.gz stock_index.tsv dump_err.txt *.pyc
 if %ERRORLEVEL% GEQ 8 set "SYNCERR=1"
+rem coa-azerothadmin holds AzerothAdmin and its model data addon
+for %%Q in (AzerothAdmin AzerothAdmin_Models) do call :pub coa-azerothadmin %%Q
 
 rem robocopy exit codes below 8 mean success
 if %SYNCERR%==1 (echo Sync reported an error - check the output above.) else (echo Done. Review and commit the changes in GitHub Desktop, in each repository that shows changes.)

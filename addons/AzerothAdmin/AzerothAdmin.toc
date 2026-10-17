@@ -1,0 +1,82 @@
+## Interface: 30300
+## Title: AzerothAdmin
+## Author: SuperStyro Dev team + Manground Dev Team
+## Version: 24
+## Notes: This addon works with Azerothcore 3.3.5
+## Name: AzerothAdmin
+## License: GPLv3
+## OptionalDeps: Ace3
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariables: AzerothAdminDb
+## SavedVariablesPerCharacter: AzerothAdminDbPerChar
+
+Libraries\LibStub\LibStub.lua
+Libraries\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libraries\AceAddon-3.0\AceAddon-3.0.xml
+Libraries\AceEvent-3.0\AceEvent-3.0.xml
+Libraries\AceDB-3.0\AceDB-3.0.xml
+Libraries\AceLocale-3.0\AceLocale-3.0.xml
+Libraries\AceConsole-3.0\AceConsole-3.0.xml
+Libraries\AceHook-3.0\AceHook-3.0.xml
+Libraries\AceGUI-3.0\AceGUI-3.0.xml
+Libraries\AceConfig-3.0\AceConfig-3.0.xml
+Libraries\FrameLib-1.0\FrameLib-1.0.lua
+Libraries\Graph-1.0\Graph-1.0.lua
+Locales\enUS\enUS.lua
+Locales\enUS\strings_enUS.lua
+# Locales\frFR\frFR.lua
+# Locales\frFR\strings_frFR.lua
+# Locales\deDE\deDE.lua
+# Locales\deDE\strings_deDE.lua
+# Locales\esES\esES.lua
+# Locales\esES\strings_esES.lua
+# Locales\esMX\esMX.lua
+# Locales\esMX\strings_esMX.lua
+# Locales\itIT\itIT.lua
+# Locales\itIT\strings_itIT.lua
+# Locales\ptPT\ptPT.lua
+# Locales\ptPT\strings_ptPT.lua
+# Locales\ptBR\ptBR.lua
+# Locales\ptBR\strings_ptBR.lua
+# Locales\ruRU\ruRU.lua
+# Locales\ruRU\strings_ruRU.lua
+# Locales\koKR\koKR.lua
+# Locales\koKR\strings_koKR.lua
+# Locales\zhCN\zhCN.lua
+# Locales\zhCN\strings_zhCN.lua
+# Locales\zhTW\zhTW.lua
+# Locales\zhTW\strings_zhTW.lua
+# Data\Models.lua moved to separate AzerothAdmin_Models addon (LoadOnDemand) - saves 5.6 MB
+Commands\Main.lua
+Commands\Tele.lua
+Commands\Char.lua
+Commands\Ticket.lua
+Commands\Misc.lua
+Commands\Server.lua
+Commands\NPC.lua
+Commands\GO.lua
+Data\DBC.lua
+Data\TeleportTable.lua
+Core\Init.lua
+Core\AzerothAdmin.lua
+Commands\Confirmation.lua
+Core\DropDownStyle.lua
+Modules\Linkifier.lua
+Frames\Frames_Start.lua
+Frames\Frames_Tabs.lua
+Frames\Frames_MiniMenu.lua
+Frames\Frames_LookupButtons.lua
+Frames\Frames_PopupFrames.lua
+Frames\Frames_SmallPopupFrames.lua
+Frames\Frames_SectionMain.lua
+Frames\Frames_SectionTele.lua
+Frames\Frames_SectionChar.lua
+Frames\Frames_SectionTicket.lua
+Frames\Frames_SectionMisc.lua
+Frames\Frames_SectionServer.lua
+Frames\Frames_SectionNpc.lua
+Frames\Frames_SectionGO.lua
+Frames\Frames.lua
+# CoA addons: movable/lockable windows, window scale, color presets (Misc page)
+Modules\CoAQoL.lua

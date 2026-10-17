@@ -90,6 +90,14 @@ TARGETS = {
         # map sizes for 26 CoA open-world sub-maps, from tools\questie-x\gen_coa_maps.py
         'copy': ['Zones/CoAExtraZones.lua'],
     },
+    'azerothadmin': {
+        'patched': os.path.join(ADDONS, 'AzerothAdmin'),
+        # quality-of-life additions (movable/lockable windows, window scale, color presets) live in one new
+        # file; the .toc only gains its line. Original .toc backed up first.
+        'pristine': {'AzerothAdmin.toc': os.path.join(ADDONS, 'AzerothAdmin', '_CoA_original', 'AzerothAdmin.toc')},
+        'edit': ['AzerothAdmin.toc'],
+        'copy': ['Modules/CoAQoL.lua'],
+    },
 }
 CONTEXT = 2  # unchanged lines kept on each side of a change, so each hunk is found in one place
 

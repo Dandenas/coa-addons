@@ -456,5 +456,18 @@
   "copy": [
    "Zones/CoAExtraZones.lua"
   ]
+ },
+ "azerothadmin": {
+  "edit": {
+   "AzerothAdmin.toc": [
+    {
+     "old": "Frames\\Frames_SectionGO.lua\nFrames\\Frames.lua",
+     "new": "Frames\\Frames_SectionGO.lua\nFrames\\Frames.lua\n# CoA addons: movable/lockable windows, window scale, color presets (Misc page)\nModules\\CoAQoL.lua\n"
+    }
+   ]
+  },
+  "copy": [
+   "Modules/CoAQoL.lua"
+  ]
  }
 }

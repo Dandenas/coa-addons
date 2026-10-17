@@ -101,7 +101,7 @@ def plan(addon, root, kit):
 
 
 def run_tests(zygor_root, tomtom_root, healbot_root=None, buttonforge_root=None, questie_root=None,
-              questiedb_root=None):
+              questiedb_root=None, azerothadmin_root=None):
     tests = []
     fixtures = [os.path.join(TOOLS, 'fixtures', f) for f in ('probe_sunstrider.lua', 'probe_human_start.lua')]
     if zygor_root:
@@ -124,6 +124,8 @@ def run_tests(zygor_root, tomtom_root, healbot_root=None, buttonforge_root=None,
         tests.append([LUA, 'test_buttonforge_coa.lua', buttonforge_root])
     if questie_root and questiedb_root:
         tests.append([LUA, 'test_questie_coa.lua', questie_root, questiedb_root])
+    if azerothadmin_root:
+        tests.append([LUA, 'test_azerothadmin_coa.lua', azerothadmin_root])
     failed = 0
     for t in tests:
         r = subprocess.run(t, cwd=TOOLS, capture_output=True, text=True, stdin=subprocess.DEVNULL)
@@ -139,20 +141,21 @@ def run_tests(zygor_root, tomtom_root, healbot_root=None, buttonforge_root=None,
 
 def main():
     ap = argparse.ArgumentParser(description='Re-apply the CoA changes to Zygor, TomTom, HealBot, Button Forge '
-                                             'and Questie-X.')
+                                             'Questie-X and AzerothAdmin.')
     ap.add_argument('--zygor', default=os.path.join(ADDONS, 'ZygorGuidesViewerRM'))
     ap.add_argument('--tomtom', default=os.path.join(ADDONS, 'TomTom'))
     ap.add_argument('--healbot', default=os.path.join(ADDONS, 'HealBot'))
     ap.add_argument('--buttonforge', default=os.path.join(ADDONS, 'ButtonForge'))
     ap.add_argument('--questie', default=os.path.join(ADDONS, 'Questie-X'))
     ap.add_argument('--questiedb', default=os.path.join(ADDONS, 'Questie-X-AscensionDB'))
+    ap.add_argument('--azerothadmin', default=os.path.join(ADDONS, 'AzerothAdmin'))
     ap.add_argument('--dry-run', action='store_true', help='report only; change nothing')
     ap.add_argument('--skip-tests', action='store_true')
     args = ap.parse_args()
 
     kit = json.load(open(os.path.join(HERE, 'hunks.json'), encoding='latin-1'))
     roots = {'zygor': args.zygor, 'tomtom': args.tomtom, 'healbot': args.healbot, 'buttonforge': args.buttonforge,
-             'questie': args.questie, 'questiedb': args.questiedb}
+             'questie': args.questie, 'questiedb': args.questiedb, 'azerothadmin': args.azerothadmin}
     plans, all_errors = {}, []
     for addon, root in roots.items():
         if not os.path.isdir(root):
@@ -198,7 +201,7 @@ def main():
     print('\nRunning tests...')
     ok = run_tests(plans.get('zygor', (None,))[0], plans.get('tomtom', (None,))[0], plans.get('healbot', (None,))[0],
                    plans.get('buttonforge', (None,))[0], plans.get('questie', (None,))[0],
-                   plans.get('questiedb', (None,))[0])
+                   plans.get('questiedb', (None,))[0], plans.get('azerothadmin', (None,))[0])
     print('\nDone. Fully restart the game (not /reload) so new files are picked up.' if ok else
           '\nSome tests failed - check the output above before playing.')
     return 0 if ok else 1
