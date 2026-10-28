@@ -335,6 +335,152 @@ do
 	assert(QA:GetTargets()[1].x == spawns[nearest][1], "the second refresh picks the same target")
 end
 
+-- Modules/Tracker/QuestieTracker.lua UpdateHeight: a tracker line that got no text (a finished single objective
+-- without completion text) was given a height of 0. That unsets the height, so the line has no bottom and
+-- "GetFirstLine():GetTop() - GetCurrentLine():GetBottom()" failed with "attempt to perform arithmetic on a nil value".
+do
+	local Stub = setmetatable({}, {})
+	getmetatable(Stub).__index = function() return Stub end
+	getmetatable(Stub).__call = function() return Stub end
+	local env = setmetatable({}, { __index = function(_, k) return _G[k] ~= nil and _G[k] or Stub end })
+	env._G = env
+	env.GetScreenHeight = function() return 1080 end
+	-- frames: a height of 0 counts as unset, like the client; a line hangs from the bottom of the one above
+	local function Frame(h)
+		return { h = h, SetHeight = function(self, v) self.h = v end, GetHeight = function(self) return self.h end }
+	end
+	local first = Frame(20)
+	first.mode = "zone"
+	first.GetTop = function() return 673 end
+	first.GetBottom = function(self) return self.h > 0 and 673 - self.h or nil end
+	local current = Frame(1)
+	current.mode = "objective"
+	current.label = { GetStringHeight = function() return 0 end } -- no text
+	current.GetTop = function() return first:GetBottom() end
+	current.GetBottom = function(self) local top = self:GetTop(); return top and self.h > 0 and top - self.h or nil end
+	local modules = {
+		TrackerLinePool = { GetFirstLine = function() return first end, GetCurrentLine = function() return current end },
+		TrackerBaseFrame = { isSizing = false },
+	}
+	env.QuestieLoader = { CreateModule = function(_, n) modules[n] = modules[n] or { private = {} }; return modules[n] end,
+	                      ImportModule = function(_, n) modules[n] = modules[n] or setmetatable({ private = {} }, getmetatable(Stub)); return modules[n] end }
+	env.Questie = setmetatable({ db = { char = { isTrackerExpanded = true }, profile = { trackerFontSizeZone = 12,
+	                            trackerHeightRatio = 0.6, TrackerHeight = 0, trackerHeaderEnabled = false, alwaysShowTracker = false } } },
+	                           { __index = function() return Stub end })
+	local ok, err = pcall(Load, core .. "Modules/Tracker/QuestieTracker.lua", env)
+	assert(ok, "QuestieTracker.lua loads: " .. tostring(err))
+	local QT = modules.QuestieTracker
+	local base, header, questFrame = Frame(0), Frame(30), Frame(0)
+	questFrame.ScrollChildFrame = Frame(0)
+	local frames = { trackerBaseFrame = base, trackerHeaderFrame = header, trackerQuestFrame = questFrame }
+	for i = 1, math.huge do
+		local name = debug.getupvalue(QT.UpdateHeight, i)
+		if not name then break end
+		if frames[name] then debug.setupvalue(QT.UpdateHeight, i, frames[name]) end
+	end
+	ok, err = pcall(QT.UpdateHeight, QT)
+	assert(ok, "an empty last tracker line doesn't break UpdateHeight: " .. tostring(err))
+	assert(current.h >= 1, "the empty line keeps a height")
+	assert(questFrame.ScrollChildFrame.h == 20 + current.h + 3, "the tracker still measures its lines (got " .. questFrame.ScrollChildFrame.h .. ")")
+end
+
+-- Modules/Quest/QuestieQuestPrivates.lua monster/object and Modules/QuestieLearner.lua live updates: in Auto mode
+-- the Learner swapped an objective's database spawns for the places the player had killed at (two kills were
+-- enough), so the map lost every other spawn point. Learned points are now added to the database ones.
+do
+	local Stub = setmetatable({}, {})
+	getmetatable(Stub).__index = function() return Stub end
+	getmetatable(Stub).__call = function() return Stub end
+	local function Count(spawns, zone)
+		return type(spawns) == "table" and type(spawns[zone]) == "table" and #spawns[zone] or 0
+	end
+	local function NewEnv(modules, questie)
+		local env = setmetatable({}, { __index = function(_, k) return _G[k] ~= nil and _G[k] or Stub end })
+		env._G = env
+		env.QuestieLoader = { CreateModule = function(_, n) modules[n] = modules[n] or { private = {} }; return modules[n] end,
+							  ImportModule = function(_, n) modules[n] = modules[n] or setmetatable({ private = {} }, getmetatable(Stub)); return modules[n] end }
+		env.Questie = setmetatable(questie, { __index = function() return Stub end })
+		return env
+	end
+
+	-- the objective spawn lists: 3 database spawns, 3 learned kill spots (one right next to a database spawn)
+	local dbSpawns = { [40] = { { 10, 10 }, { 20, 20 }, { 30, 30 } } }
+	local learner = { settings = { enabled = true, minConfidencePins = 1, dataSourceMode = "auto" },
+					  npcs = { [123] = { mc = 2, [7] = { [40] = { { 50, 50 }, { 60, 60 }, { 10.5, 10.5 } } } } },
+					  objects = { [9] = { mc = 2, [4] = { [40] = { { 70, 70 }, { 80, 80 } } } } } }
+	local modules = {
+		QuestieDB = { GetNPC = function() return { name = "Murloc Forager", spawns = dbSpawns } end,
+					  GetObject = function() return { name = "Food Crate", spawns = { [40] = { { 1, 1 } } } } end },
+		QuestieCorrections = { questNPCBlacklist = {} },
+	}
+	local env = NewEnv(modules, { Debug = function() end, IsAscension = true, dbLearner = { global = learner },
+								  db = { char = {}, profile = {} } })
+	local ok, err = pcall(Load, core .. "Modules/Quest/QuestieQuestPrivates.lua", env)
+	assert(ok, "QuestieQuestPrivates.lua loads: " .. tostring(err))
+	local calls = modules.QuestieQuest.private.objectiveSpawnListCallTable
+	local npc = calls.monster(123, {})[123]
+	assert(Count(npc.Spawns, 40) == 5, "learned kill spots are added to the database spawns, not swapped in (got " .. Count(npc.Spawns, 40) .. ")")
+	assert(npc.isLearned == true, "the merged list counts as learned (PopulateObjective doesn't suppress it)")
+	assert(#dbSpawns[40] == 3, "the database's own spawn table is left alone")
+	local obj = calls.object(9, {})[9]
+	assert(Count(obj.Spawns, 40) == 3, "learned object spots are added too (got " .. Count(obj.Spawns, 40) .. ")")
+	learner.settings.dataSourceMode = "learner"
+	assert(Count(calls.monster(123, {})[123].Spawns, 40) == 3, "Learner Only mode still shows only the learned spots")
+
+	-- the Learner's live updates: the overrides it writes for a killed NPC / a used object keep the database spawns
+	local overrides, objectOverrides = {}, {}
+	local compiled = { npc = { [123] = { [40] = { { 10, 10 }, { 20, 20 }, { 30, 30 } } } },
+					   object = { [9] = { [40] = { { 1, 1 } } } } }
+	local function Handle(kind, ovr, field) -- like the DB handle: an override's field wins whenever it holds data
+		return function(id, key)
+			if key ~= "spawns" then return nil end
+			local o = ovr[id]
+			if o and type(o[field]) == "table" and next(o[field]) then return o[field] end
+			return compiled[kind][id]
+		end
+	end
+	local QDB = { npcDataOverrides = overrides, objectDataOverrides = objectOverrides,
+				  private = { npcCache = {}, objectCache = {} },
+				  QueryNPCSingle = Handle("npc", overrides, 7), QueryObjectSingle = Handle("object", objectOverrides, 4) }
+	local lmodules = { QuestieDB = QDB }
+	local saved = { settings = { enabled = true, learnNpcs = true, learnObjects = true, minConfidencePins = 1,
+								 dataSourceMode = "auto" },
+					npcs = {}, quests = {}, items = {}, objects = {} }
+	local lenv = NewEnv(lmodules, { Debug = function() end, dbLearner = { global = saved },
+									db = { char = {}, profile = {}, global = {} } })
+	lenv.QuestieCompat = {} -- no C_Timer: live updates are applied at once
+	lenv.GetTime = function() return 100 end
+	lenv.time = os.time
+	ok, err = pcall(Load, core .. "Modules/QuestieLearner.lua", lenv)
+	assert(ok, "QuestieLearner.lua loads: " .. tostring(err))
+	local QL = lmodules.QuestieLearner
+	ok, err = pcall(QL.LearnNPC, QL, 123, "Murloc Forager", 5, nil, nil, nil, 50, 50, 40)
+	assert(ok, "learning a kill works: " .. tostring(err))
+	ok, err = pcall(QL.LearnNPC, QL, 123, "Murloc Forager", 5, nil, nil, nil, 60, 60, 40)
+	assert(ok, "learning a second kill works: " .. tostring(err))
+	local learned = QDB.QueryNPCSingle(123, "spawns")
+	assert(Count(learned, 40) == 5, "the Learner's override keeps the database spawns and adds the kill spots (got " .. Count(learned, 40) .. ")")
+	ok, err = pcall(QL.LearnObject, QL, 9, "Food Crate", 70, 70, 40, true)
+	assert(ok, "learning an object works: " .. tostring(err))
+	learned = QDB.QueryObjectSingle(9, "spawns")
+	assert(Count(learned, 40) == 2, "the object override keeps the database spawn too (got " .. Count(learned, 40) .. ")")
+	assert(Count(saved.objects[9][4], 40) == 1, "the saved learner record holds only what was learned")
+
+	-- switching Data Source Mode to Learner Only and back to Auto brings the database overrides back
+	-- (CopyTable called a DeepCopy that was never assigned: "attempt to call upvalue 'DeepCopy'")
+	overrides[555] = { "Static NPC", [7] = { [40] = { { 5, 5 } } } }
+	ok, err = pcall(QL.ApplyDataSourceMode, QL)
+	assert(ok, "applying Auto mode works: " .. tostring(err))
+	saved.settings.dataSourceMode = "learner"
+	ok, err = pcall(QL.ApplyDataSourceMode, QL)
+	assert(ok, "switching to Learner Only works: " .. tostring(err))
+	assert(overrides[555] == nil, "Learner Only mode sets the database overrides aside")
+	saved.settings.dataSourceMode = "auto"
+	ok, err = pcall(QL.ApplyDataSourceMode, QL)
+	assert(ok, "switching back to Auto works: " .. tostring(err))
+	assert(overrides[555] and overrides[555][1] == "Static NPC", "switching back to Auto brings the database overrides back")
+end
+
 -- AscensionLoader.lua: registers the plugin at PLAYER_LOGIN only on Ascension.
 local function Registers(realm, ascensionClient)
 	local env = Env(realm, ascensionClient)
@@ -355,4 +501,4 @@ end
 assert(Registers("Nozdormu", true) == "Ascension", "the Ascension plugin registers on CoA")
 assert(Registers("Nozdormu", false) == nil, "the Ascension plugin stays off on a stock client")
 
-print("Questie-X CoA regression passed (detection, maps, pins, runtime mode, turn-ins, tracker re-link, DB init window, kill-credit ids, arrow targets)")
+print("Questie-X CoA regression passed (detection, maps, pins, runtime mode, turn-ins, tracker re-link, DB init window, kill-credit ids, arrow targets, tracker empty line, learned spawns, mode switch)")

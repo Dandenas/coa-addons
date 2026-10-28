@@ -68,16 +68,22 @@ TARGETS = {
         # nested kill-credit id lists were compared with 0 (QuestieLearner.lua, QuestieQuestPrivates.lua).
         # The arrow re-converted and sorted every objective spawn each second, a stutter on big objectives
         # (QuestieArrow.lua), and the player position was re-read 20 times a second (HBD.lua).
+        # Tracker lines that got no text (a finished single objective without completion text) were set to height 0,
+        # which left them without a position and crashed UpdateHeight with arithmetic on nil (QuestieTracker.lua).
+        # In Auto mode the Learner swapped an objective's database spawns for the player's kill spots, in the spawn
+        # lists and in the overrides it writes, so two kills hid every other pin (QuestieQuestPrivates.lua, QuestieLearner.lua).
+        # Switching Data Source Mode back to Auto or Static called a DeepCopy that was never assigned (QuestieLearner.lua).
         'pristine': {rel: os.path.join(ADDONS, 'Questie-X', '_CoA_original', rel)
                      for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua',
                                  'Modules/FramePool/QuestieFramePool.lua', 'Modules/QuestieInit.lua',
                                  'Modules/Quest/QuestieQuest.lua', 'Database/QuestieDB.lua',
                                  'Modules/QuestieLearner.lua', 'Modules/Quest/QuestieQuestPrivates.lua',
-                                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua')},
+                                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua',
+                                 'Modules/Tracker/QuestieTracker.lua')},
         'edit': ['Modules/QuestieServer.lua', 'Compat/Compat.lua', 'Modules/FramePool/QuestieFramePool.lua',
                  'Modules/QuestieInit.lua', 'Modules/Quest/QuestieQuest.lua', 'Database/QuestieDB.lua',
                  'Modules/QuestieLearner.lua', 'Modules/Quest/QuestieQuestPrivates.lua',
-                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua'],
+                 'Modules/Arrow/QuestieArrow.lua', 'Compat/HBD.lua', 'Modules/Tracker/QuestieTracker.lua'],
         'copy': [],
     },
     'questiedb': {
