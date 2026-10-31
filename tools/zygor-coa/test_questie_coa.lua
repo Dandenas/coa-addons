@@ -426,6 +426,12 @@ do
 	assert(Count(obj.Spawns, 40) == 3, "learned object spots are added too (got " .. Count(obj.Spawns, 40) .. ")")
 	learner.settings.dataSourceMode = "learner"
 	assert(Count(calls.monster(123, {})[123].Spawns, 40) == 3, "Learner Only mode still shows only the learned spots")
+	-- an objective NPC whose learned position is only where the player stood (a mouseover / quest window guess)
+	learner.npcs[456] = { mc = 3, spawnSource = "fallback", [7] = { [40] = { { 55, 55, 3 } } } }
+	assert(Count(calls.monster(456, {})[456].Spawns, 40) == 1, "Learner Only mode still uses the guess")
+	learner.settings.dataSourceMode = "auto"
+	local guessed = calls.monster(456, {})[456]
+	assert(Count(guessed.Spawns, 40) == 3 and not guessed.isLearned, "Auto mode leaves the guess out when the database has spawns (got " .. Count(guessed.Spawns, 40) .. ")")
 
 	-- the Learner's live updates: the overrides it writes for a killed NPC / a used object keep the database spawns
 	local overrides, objectOverrides = {}, {}
@@ -479,6 +485,43 @@ do
 	ok, err = pcall(QL.ApplyDataSourceMode, QL)
 	assert(ok, "switching back to Auto works: " .. tostring(err))
 	assert(overrides[555] and overrides[555][1] == "Static NPC", "switching back to Auto brings the database overrides back")
+
+	-- a quest giver learned from a mouseover / target / quest window is saved where the player stood, not where the
+	-- NPC is: with a database position that guess adds no second pin (Thork at the Crossroads)
+	compiled.npc[3429] = { [40] = { { 51.5, 30.87 } } }
+	lenv.QuestieCompat.GetCurrentPlayerPosition = function() return 40, 0.525, 0.33 end -- the next 2% square over
+	ok, err = pcall(QL.LearnNPC, QL, 3429, "Thork", 42, nil, 2, nil, nil, nil, 40)
+	assert(ok, "learning a quest giver from a mouseover works: " .. tostring(err))
+	assert(saved.npcs[3429].spawnSource == "fallback" and Count(saved.npcs[3429][7], 40) == 1, "the mouseover is saved as a guess")
+	learned = QDB.QueryNPCSingle(3429, "spawns")
+	assert(Count(learned, 40) == 1, "the guess adds no pin next to the database one (got " .. Count(learned, 40) .. ")")
+	lenv.QuestieCompat.GetCurrentPlayerPosition = function() return 40, 0.6, 0.6 end
+	ok, err = pcall(QL.LearnNPC, QL, 3429, "Thork", 42, nil, 2, nil, nil, nil, 40)
+	assert(ok, "learning it again works: " .. tostring(err))
+	learned = QDB.QueryNPCSingle(3429, "spawns")
+	assert(Count(learned, 40) == 1 and learned[40][1][1] == 51.5 and learned[40][1][2] == 30.87, "the database pin stays the only one, where it is")
+	-- a quest giver the database has no position for still gets its learned pin
+	ok, err = pcall(QL.LearnNPC, QL, 3430, "New Giver", 10, nil, 2, nil, nil, nil, 40)
+	assert(ok, "learning an unknown quest giver works: " .. tostring(err))
+	learned = QDB.QueryNPCSingle(3430, "spawns")
+	assert(Count(learned, 40) == 1 and learned[40][1][1] == 60, "an NPC missing from the database gets the learned pin")
+	-- so does one the database only knows as instance-only ({-1, -1}: no map position)
+	compiled.npc[3431] = { [209] = { { -1, -1 } } }
+	ok, err = pcall(QL.LearnNPC, QL, 3431, "Instance Giver", 30, nil, 2, nil, nil, nil, 40)
+	assert(ok, "learning an instance-only quest giver works: " .. tostring(err))
+	assert(Count(QDB.QueryNPCSingle(3431, "spawns"), 40) == 1, "an instance-only NPC keeps its learned pin")
+	-- a kill in the same 2% square as a database spawn no longer drags that spawn toward it
+	compiled.npc[124] = { [40] = { { 10, 10 } } }
+	ok, err = pcall(QL.LearnNPC, QL, 124, "Murloc Forager", 5, nil, nil, nil, 11.5, 11.5, 40)
+	assert(ok, "learning a kill next to a database spawn works: " .. tostring(err))
+	learned = QDB.QueryNPCSingle(124, "spawns")
+	assert(Count(learned, 40) == 1 and learned[40][1][1] == 10 and learned[40][1][2] == 10, "the database spawn stays where it is (got " .. tostring(learned[40][1][1]) .. ", " .. tostring(learned[40][1][2]) .. ")")
+	-- after a /reload the saved guesses are restored the same way
+	overrides[3429], overrides[3430] = nil, nil
+	ok, err = pcall(QL.InjectLearnedData, QL)
+	assert(ok, "restoring learned data after a /reload works: " .. tostring(err))
+	assert(Count(QDB.QueryNPCSingle(3429, "spawns"), 40) == 1, "the restore leaves the guesses out too (got " .. Count(QDB.QueryNPCSingle(3429, "spawns"), 40) .. ")")
+	assert(Count(QDB.QueryNPCSingle(3430, "spawns"), 40) == 1, "the restore keeps the unknown quest giver's pin")
 end
 
 -- AscensionLoader.lua: registers the plugin at PLAYER_LOGIN only on Ascension.
@@ -501,4 +544,4 @@ end
 assert(Registers("Nozdormu", true) == "Ascension", "the Ascension plugin registers on CoA")
 assert(Registers("Nozdormu", false) == nil, "the Ascension plugin stays off on a stock client")
 
-print("Questie-X CoA regression passed (detection, maps, pins, runtime mode, turn-ins, tracker re-link, DB init window, kill-credit ids, arrow targets, tracker empty line, learned spawns, mode switch)")
+print("Questie-X CoA regression passed (detection, maps, pins, runtime mode, turn-ins, tracker re-link, DB init window, kill-credit ids, arrow targets, tracker empty line, learned spawns, mode switch, quest giver guesses)")

@@ -27,6 +27,10 @@ Only what differs from Questie's stock data:
 
 Spawn positions are converted to zone map percentages with the client's map data (`coords.py`). This matches Questie's stock zone for about 87% of NPCs; the rest are at zone borders and still map to the right world position.
 
+Zone maps overlap at borders. There, a spawn goes in the zone of its own quests (ones it gives, takes, is an objective of, or drops a quest item for) when it's on that zone's map, as Questie's stock data does (the Rebel Camp is on the Stranglethorn map, not Duskwood's). Otherwise it goes in the zone it is furthest inside. Capital cities are left out of this: a spawn inside a city stays there, and a city's quests don't pull mobs from outside the walls onto the city map. The build report counts the positions moved this way.
+
+CoA's own areas (ids 10000 and up) are mostly caves and starting valleys, which are folded into the zone around them as in Questie's stock data. Areas whose world map is at least 3,000 yards wide are whole zones with their own map (Pale Reach, Druk'Thar) and keep it; the largest CoA sub-map is about 1,800 yards. Their map sizes come from `CoAExtraZones.lua`, so Questie draws their pins on their own map.
+
 A quest the server marks "any race" but which is given only by Alliance-friendly (or only Horde-friendly) NPCs is marked for that faction, from the client's `FactionTemplate.dbc`.
 
 The CoA values are re-applied over the Ascension plugin's, because Questie otherwise lets Ascension-live data win.

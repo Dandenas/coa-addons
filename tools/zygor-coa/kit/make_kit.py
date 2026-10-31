@@ -73,6 +73,8 @@ TARGETS = {
         # In Auto mode the Learner swapped an objective's database spawns for the player's kill spots, in the spawn
         # lists and in the overrides it writes, so two kills hid every other pin (QuestieQuestPrivates.lua, QuestieLearner.lua).
         # Switching Data Source Mode back to Auto or Static called a DeepCopy that was never assigned (QuestieLearner.lua).
+        # A quest giver hovered over or targeted from a distance got a second pin where the player stood, and learned
+        # points pulled database positions toward them (QuestieLearner.lua, QuestieQuestPrivates.lua).
         'pristine': {rel: os.path.join(ADDONS, 'Questie-X', '_CoA_original', rel)
                      for rel in ('Modules/QuestieServer.lua', 'Compat/Compat.lua',
                                  'Modules/FramePool/QuestieFramePool.lua', 'Modules/QuestieInit.lua',
